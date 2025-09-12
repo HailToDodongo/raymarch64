@@ -1,0 +1,341 @@
+include "rsp.inc"
+
+// some dummy defines to make it work without libdragon
+#define RSPQ_BeginOverlayHeader ;
+#define RSPQ_EndOverlayHeader ;
+#define RSPQ_BeginSavedState ;
+#define RSPQ_EndSavedState ;
+#define RSPQ_EmptySavedState ;
+
+#define DMEM_RAYPOS_X 0
+#define DMEM_RAYPOS_Y 4
+#define DMEM_RAYPOS_Z 8
+
+#define DMEM_RAYDIR_A_X 12
+#define DMEM_RAYDIR_A_Y 16
+#define DMEM_RAYDIR_A_Z 20
+#define DMEM_HITPOS_A_X 24
+#define DMEM_HITPOS_A_Y 28
+#define DMEM_HITPOS_A_Z 32
+#define DMEM_LAST_DIST_A 36
+#define DMEM_TOTAL_DIST_A 40
+
+#define DMEM_RAYDIR_B_X 44
+#define DMEM_RAYDIR_B_Y 48
+#define DMEM_RAYDIR_B_Z 52
+#define DMEM_HITPOS_B_X 56
+#define DMEM_HITPOS_B_Y 60
+#define DMEM_HITPOS_B_Z 64
+#define DMEM_LAST_DIST_B 68
+#define DMEM_TOTAL_DIST_B 72
+
+#define DMEM_LERP_A 76
+#define DMEM_LERP_B 78
+
+#define DMEM_INIT_DIST 80
+
+
+state {
+  vec16 _DUMMY_;
+}
+
+// See rspq_triangle.inc
+function RDPQ_Triangle(
+  u32<$a0> triCmd,
+  u16<$a1> vtx1, u16<$a2> vtx2, u16<$a3> vtx3,
+  u16<$v0> cull, u16<$s3> ptrDMEM
+);
+
+// DMA from RDRAM into DMEM
+macro dmaInAsync(u32 addrRDRAM, u32 addrDMEM, u32 size)
+{
+  @Barrier("DMA") set_dma_addr_rsp(addrDMEM);
+  @Barrier("DMA") set_dma_addr_rdram(addrRDRAM);
+  @Barrier("DMA") set_dma_read(size);
+}
+
+// DMA from DMEM into RDRAM
+macro dmaOutAsync(u32 addrRDRAM, u32 addrDMEM, u32 size)
+{
+  @Barrier("DMA") set_dma_addr_rsp(addrDMEM);
+  @Barrier("DMA") set_dma_addr_rdram(addrRDRAM);
+  @Barrier("DMA") set_dma_write(size);
+}
+
+/**
+ * RSPL relies on some vector registers setup by 'rsp_queue.inc' in libdragon.
+ * Replicate the setup here for the two shift and zero register values.
+ */
+@NoReturn
+function Main()
+{
+   undef VSHIFT; undef VSHIFT8;
+  vec16<$v30> VSHIFT; // make writable
+  vec16<$v31> VSHIFT8;
+
+  asm("vxor $v00, $v00, $v00");
+  u16 tmp = 0x8000;
+  VSHIFT8.x = tmp; tmp >>= 1;
+  VSHIFT8.y = tmp; tmp >>= 1;
+  VSHIFT8.z = tmp; tmp >>= 1;
+  VSHIFT8.w = tmp; tmp >>= 1;
+  VSHIFT8.X = tmp; tmp >>= 1;
+  VSHIFT8.Y = tmp; tmp >>= 1;
+  VSHIFT8.Z = tmp; tmp >>= 1;
+  VSHIFT8.W = tmp;
+
+  VSHIFT = VSHIFT8 >>> 8;
+  SHIFT_END:
+
+  // SDF constants
+  vec32<$v04> ONE = 1;
+
+  vec32<$v06> SPHERE_RAD;
+  SPHERE_RAD.x = 0.25;
+  SPHERE_RAD.y = 0.075;
+  SPHERE_RAD.z = 0.5;
+
+  SPHERE_RAD.X = 2.5;
+  SPHERE_RAD.Y = 0.2;
+
+  SPHERE_RAD.Z = -0.25;
+  SPHERE_RAD.W = -0.075;
+
+  vec32<$v08> LERP_FACTOR;
+
+  vec32<$v10> rayPosOrg;
+  rayPosOrg.x = load(ZERO, DMEM_RAYPOS_X).x;
+  rayPosOrg.y = load(ZERO, DMEM_RAYPOS_Y).x;
+  rayPosOrg.z = load(ZERO, DMEM_RAYPOS_Z).x;
+
+  rayPosOrg.X = rayPosOrg.x;
+  rayPosOrg.Y = rayPosOrg.y;
+  rayPosOrg.Z = rayPosOrg.z;
+
+  //u32<$a0> dmemFbAddr = 0x1000;
+
+  s32<$a0> RENDER_DIST = 11.0 << 16;
+  s32<$a1> STOP_DIST   = 0.016 * 0xFFFF;
+}
+
+macro invSqrt0(vec32 out, vec32 in)
+{
+  asm_op("vrsqh", out:sint.x, VZERO.x);
+  asm_op("vrsql", out:sfract.x, in:sfract.x);
+  asm_op("vrsqh", out:sint.x, VZERO.x);
+  //out.x = invert_half_sqrt(in).x;
+}
+
+macro invSqrt1(vec32 out, vec32 in)
+{
+  asm_op("vrsqh", out:sint.X, VZERO.X);
+  asm_op("vrsql", out:sfract.X, in:sfract.X);
+  asm_op("vrsqh", out:sint.X, VZERO.x);
+  //out.X = invert_half_sqrt(in).X;
+}
+
+macro unsafeVSR8(vec32 out, vec32 in)
+{
+  asm_op("vmudm", out:sint,   in:sint,   VSHIFT8.W);
+  asm_op("vmadl", out:sfract, in:sfract, VSHIFT8.W);
+}
+
+@NoReturn
+function RayMarch()
+{
+  // globals, loaded once and preserved across this function call
+  vec32<$v02> s;
+  vec32<$v04> ONE;
+  vec32<$v06> SPHERE_RAD;
+  vec32<$v08> LERP_FACTOR;
+  vec32<$v10> rayPosOrg;
+  s32<$a0> RENDER_DIST;
+  s32<$a1> STOP_DIST;
+
+  vec32<$v12> rayDir;
+  ///rayDir = load(ZERO, DMEM_RAYDIR_A);
+
+  // @TODO: 16bit fractional?
+  rayDir.x = load(ZERO, DMEM_RAYDIR_A_X).x;
+  rayDir.y = load(ZERO, DMEM_RAYDIR_A_Y).x;
+  rayDir.z = load(ZERO, DMEM_RAYDIR_A_Z).x;
+
+  rayDir.X = load(ZERO, DMEM_RAYDIR_B_X).x;
+  rayDir.Y = load(ZERO, DMEM_RAYDIR_B_Y).x;
+  rayDir.Z = load(ZERO, DMEM_RAYDIR_B_Z).x;
+
+
+  u8<$t5> isDoneAFlag = 1;
+  u8<$t6> isDoneBFlag = 1;
+
+  //u32 maxSteps = 64;
+  s32 totalDistA = 0;
+  s32 totalDistB = 0;
+  s32 distA;
+  s32 distB;
+
+  vec32 posSq;
+  posSq:sint = 0;
+  vec32 res;
+
+  res.x = load(ZERO, DMEM_INIT_DIST).x;
+  res = res.x;
+
+  LERP_FACTOR:ufract.x = load(ZERO, DMEM_LERP_A).x;
+  LERP_FACTOR:ufract.y = load(ZERO, DMEM_LERP_B).x;
+  LERP_FACTOR:ufract.X = LERP_FACTOR:ufract.x;
+  LERP_FACTOR:ufract.Y = LERP_FACTOR:ufract.y;
+
+  vec32 totalDist = 0;
+
+  vec32 nextPos;
+  vec16 currDist;
+
+  //u32 iterCount = 128;
+  loop {
+    totalDist += res;
+
+    @Barrier("lenA") store(res.x, ZERO, DMEM_LAST_DIST_A);
+    @Barrier("lenB") store(res.X, ZERO, DMEM_LAST_DIST_B);
+
+    @Barrier("lenA") distA = load(ZERO, DMEM_LAST_DIST_A);
+    @Barrier("lenB") distB = load(ZERO, DMEM_LAST_DIST_B);
+
+    totalDistA += distA;
+    totalDistB += distB;
+
+    u8 isDoneA = distA < STOP_DIST;
+    u8 isDoneB = distB < STOP_DIST;
+    {
+      u8 tmp = totalDistA > RENDER_DIST;
+      isDoneA |= tmp;
+      tmp = totalDistB > RENDER_DIST;
+      isDoneB |= tmp;
+    }
+
+    nextPos = ONE * rayPosOrg;
+    nextPos = rayDir +* totalDist.xxxxXXXX;
+
+    vec32 nextPosFloor;
+    nextPosFloor:sint = ONE +* SPHERE_RAD:sfract.z;
+
+    nextPos:sint -= nextPosFloor:sint;
+    undef nextPosFloor;
+
+    store(totalDistA, ZERO, DMEM_TOTAL_DIST_A);
+
+    if(isDoneA == isDoneAFlag)goto markDoneA;
+    __RET_MARK_DONE_A:
+
+    posSq:sfract = nextPos * nextPos;
+    store(totalDistB, ZERO, DMEM_TOTAL_DIST_B);
+
+    if(isDoneB == isDoneBFlag)goto markDoneB;
+    __RET_MARK_DONE_B:
+
+    res = posSq:sfract + posSq:sfract.zzzzZZZZ;
+
+    @Barrier("p.x") store(nextPos.x, ZERO, DMEM_HITPOS_A_X);
+    @Barrier("p.y") store(nextPos.y, ZERO, DMEM_HITPOS_A_Y);
+    @Barrier("p.z") store(nextPos.z, ZERO, DMEM_HITPOS_A_Z);
+
+    @Barrier("p.X") store(nextPos.X, ZERO, DMEM_HITPOS_B_X);
+    @Barrier("p.Y") store(nextPos.Y, ZERO, DMEM_HITPOS_B_Y);
+    @Barrier("p.Z") store(nextPos.Z, ZERO, DMEM_HITPOS_B_Z);
+      //////// SDF ////////
+
+      { // Sphere & Torus
+
+        vec32 tmpA;
+        vec32 tmpB;
+        vec32 resSphere;
+
+        tmpB = invSqrt0(res);
+        tmpB = invSqrt1(res);
+
+        tmpA = res:sfract + posSq:sfract.yyyyYYYY;
+
+        res = unsafeVSR8(tmpB);
+
+        resSphere = invSqrt0(tmpA);
+        s32 resSphereA = resSphere.x;
+
+        tmpB:sfract.x = invert_half(res).x;
+        tmpB:sfract.X = invert_half(res).X;
+
+        resSphere = invSqrt1(tmpA);
+        s32 resSphereB = resSphere.X;
+
+        resSphereA >>= 8;
+        resSphereB >>= 8;
+        @Barrier("a") store(resSphereA, ZERO, 120);
+        @Barrier("b") store(resSphereB, ZERO, 124);
+
+        res:ufract = tmpB:ufract - SPHERE_RAD:ufract.x;
+        res:sint = VZERO - SPHERE_RAD:sint.x;
+
+        res:sfract = res * res;
+        tmpA = ONE +* posSq.yyyyYYYY;
+
+        @Barrier("a") tmpB.x = load(ZERO, 120).x;
+        @Barrier("b") tmpB.X = load(ZERO, 124).x;
+
+        //tmpB = unsafeVSR8(resSphere);
+
+        // sqrt
+        res = invSqrt0(tmpA);
+        res = invSqrt1(tmpA);
+
+        resSphere:sfract.x = invert_half(tmpB).x;
+
+        //tmpB = res >> 8;
+        tmpA = unsafeVSR8(res);
+
+        resSphere:sfract.X = invert_half(tmpB).X;
+
+        res:sfract.x = invert_half(tmpA).x;
+        res:sfract.X = invert_half(tmpA).X;
+
+        resSphere:ufract = resSphere:ufract - SPHERE_RAD:ufract.x;
+        resSphere:sint = VZERO - VZERO; // sign extend
+
+        res:ufract = res:ufract - SPHERE_RAD:ufract.y;
+        res:sint = VZERO - VZERO; // sign extend
+
+        undef tmpA;
+        undef tmpB;
+
+
+      // LERP
+      resSphere = resSphere * LERP_FACTOR:ufract.yyyyYYYY;
+      res = res +* LERP_FACTOR:ufract.xxxxXXXX;
+    }
+
+  }
+  LOOP_END:
+
+  asm("");
+  asm("break");
+
+  markDoneA:
+  {
+    LERP_FACTOR:ufract.x = 0;
+
+    isDoneAFlag = 0xFF; // only run this function once
+    if(isDoneAFlag == isDoneBFlag)goto LOOP_END;
+
+    LERP_FACTOR:ufract.y = 0;
+    goto __RET_MARK_DONE_A;
+  }
+
+  markDoneB:
+  {
+    LERP_FACTOR:ufract.X = 0;
+
+    isDoneBFlag = 0xFF;
+    if(isDoneAFlag == isDoneBFlag)goto LOOP_END;
+
+    LERP_FACTOR:ufract.Y = 0;
+    goto __RET_MARK_DONE_B;
+  }
+}
