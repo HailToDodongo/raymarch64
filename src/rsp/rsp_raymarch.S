@@ -172,173 +172,154 @@ Main:
   vmov $v11.e6, $v11.e2                              ## L:113  |     61 | rayPosOrg.Z = rayPosOrg.z;
   mtc2 $zero, $v06.e1                                ## L:95   |      ^ | SPHERE_RAD.y = 0.075;
 RayMarch:
-  lsv $v13, 2, 18, $zero                             ## L:160  |      ^ | rayDir.y = load(ZERO, 16).x;
-  lsv $v09, 0, 76, $zero                             ## L:184  |      2 | LERP_FACTOR:ufract.x = load(ZERO, 76).x;
-  lsv $v13, 8, 46, $zero                             ## L:163  |      3 | rayDir.X = load(ZERO, 44).x;
-  lsv $v12, 8, 44, $zero                             ## L:163  |      4 | rayDir.X = load(ZERO, 44).x;
-  lsv $v16, 0, 80, $zero                             ## L:181  |      5 | res.x = load(ZERO, 80).x;
-  lsv $v09, 2, 78, $zero                             ## L:185  |      6 | LERP_FACTOR:ufract.y = load(ZERO, 78).x;
-  lsv $v12, 10, 48, $zero                            ## L:164  |      7 | rayDir.Y = load(ZERO, 48).x;
-  lsv $v12, 4, 20, $zero                             ## L:161  |      8 | rayDir.z = load(ZERO, 20).x;
-  lsv $v17, 0, 82, $zero                             ## L:181  |      9 | res.x = load(ZERO, 80).x;
-  lsv $v13, 4, 22, $zero                             ## L:161  |     10 | rayDir.z = load(ZERO, 20).x;
-  vmov $v09.e5, $v09.e1                              ## L:187  |      ^ | LERP_FACTOR:ufract.Y = LERP_FACTOR:ufract.y;
-  lsv $v13, 10, 50, $zero                            ## L:164  |     11 | rayDir.Y = load(ZERO, 48).x;
-  vxor $v14, $v00, $v00                              ## L:178  |      ^ | posSq:sint = 0;
-  addiu $t6, $zero, 1                                ## L:169  |     12 | u8<$t6> isDoneBFlag = 1;
-  vor $v16, $v00, $v16.e0                            ## L:182  |      ^ | res = res.x;
-  lsv $v12, 0, 12, $zero                             ## L:159  |     13 | rayDir.x = load(ZERO, 12).x;
-  vxor $v18, $v00, $v00                              ## L:189  |      ^ | vec32 totalDist = 0;
-  vor $v17, $v00, $v17.e0                            ## L:182  |     14 | res = res.x;
-  lsv $v13, 0, 14, $zero                             ## L:159  |      ^ | rayDir.x = load(ZERO, 12).x;
-  lsv $v13, 12, 54, $zero                            ## L:165  |     15 | rayDir.Z = load(ZERO, 52).x;
-  vmov $v09.e4, $v09.e0                              ## L:186  |      ^ | LERP_FACTOR:ufract.X = LERP_FACTOR:ufract.x;
-  vxor $v19, $v00, $v00                              ## L:189  |     16 | vec32 totalDist = 0;
-  addiu $t5, $zero, 1                                ## L:168  |      ^ | u8<$t5> isDoneAFlag = 1;
-  lsv $v12, 2, 16, $zero                             ## L:160  |     17 | rayDir.y = load(ZERO, 16).x;
-  lsv $v12, 12, 52, $zero                            ## L:165  |     18 | rayDir.Z = load(ZERO, 52).x;
-  or $t1, $zero, $zero                               ## L:173  |     19 | s32 totalDistB = 0;
-  or $t0, $zero, $zero                               ## L:172  |     20 | s32 totalDistA = 0;
+  vxor $v01, $v00, $v00                              ## L:166  |      ^ | posSq:sint = 0;
+  lsv $v12, 8, 44, $zero                             ## L:183  |      ^ | rayDir.X = load(ZERO, 44).x;
+  lsv $v14, 0, 80, $zero                             ## L:169  |      2 | res.x = load(ZERO, 80).x;
+  lsv $v15, 0, 82, $zero                             ## L:169  |      3 | res.x = load(ZERO, 80).x;
+  or $t1, $zero, $zero                               ## L:161  |      4 | s32 totalDistB = 0;
+  lsv $v13, 8, 46, $zero                             ## L:183  |      5 | rayDir.X = load(ZERO, 44).x;
+  addiu $t5, $zero, 1                                ## L:156  |      6 | u8<$t5> isDoneAFlag = 1;
+  lsv $v13, 4, 22, $zero                             ## L:181  |      7 | rayDir.z = load(ZERO, 20).x;
+  vxor $v16, $v00, $v00                              ## L:172  |      ^ | vec32 totalDist = 0;
+  vor $v14, $v00, $v14.e0                            ## L:170  |      8 | res = res.x;
+  lsv $v13, 2, 18, $zero                             ## L:180  |      ^ | rayDir.y = load(ZERO, 16).x;
+  vor $v15, $v00, $v15.e0                            ## L:170  |      9 | res = res.x;
+  lsv $v13, 0, 14, $zero                             ## L:179  |      ^ | rayDir.x = load(ZERO, 12).x;
+  vxor $v17, $v00, $v00                              ## L:172  |     10 | vec32 totalDist = 0;
+  lsv $v12, 0, 12, $zero                             ## L:179  |      ^ | rayDir.x = load(ZERO, 12).x;
+  lsv $v12, 2, 16, $zero                             ## L:180  |     11 | rayDir.y = load(ZERO, 16).x;
+  lsv $v12, 4, 20, $zero                             ## L:181  |     12 | rayDir.z = load(ZERO, 20).x;
+  or $t0, $zero, $zero                               ## L:160  |     13 | s32 totalDistA = 0;
+  lsv $v13, 10, 50, $zero                            ## L:184  |     14 | rayDir.Y = load(ZERO, 48).x;
+  lsv $v12, 10, 48, $zero                            ## L:184  |     15 | rayDir.Y = load(ZERO, 48).x;
+  addiu $t6, $zero, 1                                ## L:157  |     16 | u8<$t6> isDoneBFlag = 1;
   LABEL_RayMarch_0001:
-  vaddc $v19, $v19, $v17.v                           ## L:196  |      ^ | totalDist += res;
-  ssv $v16, 0, 36, $zero                             ## L:198  |     21 | @Barrier("lenA") store(res.x, ZERO, 36); ## Barrier: 0x1
-  vadd $v18, $v18, $v16.v                            ## L:196  |      ^ | totalDist += res;
-  vmudl $v29, $v05, $v11.v                           ## L:216  |     22 | nextPos = ONE * rayPosOrg;
-  ssv $v16, 8, 68, $zero                             ## L:199  |      ^ | @Barrier("lenB") store(res.X, ZERO, 68); ## Barrier: 0x2
-  ssv $v17, 0, 38, $zero                             ## L:198  |     23 | @Barrier("lenA") store(res.x, ZERO, 36); ## Barrier: 0x1
-  vmadm $v29, $v04, $v11.v                           ## L:216  |      ^ | nextPos = ONE * rayPosOrg;
-  lw $t2, 36($zero)                                  ## L:201  |     24 | @Barrier("lenA") distA = load(ZERO, 36); ## Barrier: 0x1
-  vmadn $v21, $v05, $v10.v                           ## L:216  |      ^ | nextPos = ONE * rayPosOrg;
-  ssv $v17, 8, 70, $zero                             ## L:199  |     25 | @Barrier("lenB") store(res.X, ZERO, 68); ## Barrier: 0x2
-  vmadh $v20, $v04, $v10.v                           ## L:216  |      ^ | nextPos = ONE * rayPosOrg;
-  vmadl $v29, $v13, $v19.h0                          ## L:217  |     26 | nextPos = rayDir +* totalDist.xxxxXXXX;
-  lw $t3, 68($zero)                                  ## L:202  |      ^ | @Barrier("lenB") distB = load(ZERO, 68); ## Barrier: 0x2
-  addu $t0, $t0, $t2                                 ## L:204  |     27 | totalDistA += distA;
-  vmadm $v29, $v12, $v19.h0                          ## L:217  |      ^ | nextPos = rayDir +* totalDist.xxxxXXXX;
-  slt $t4, $t2, $a1                                  ## L:207  |     28 | u8 isDoneA = distA < STOP_DIST;
-  vmadn $v21, $v13, $v18.h0                          ## L:217  |      ^ | nextPos = rayDir +* totalDist.xxxxXXXX;
-  vmadh $v20, $v12, $v18.h0                          ## L:217  |     29 | nextPos = rayDir +* totalDist.xxxxXXXX;
-  slt $t8, $a0, $t0                                  ## L:210  |      ^ | u8 tmp = totalDistA > RENDER_DIST;
-  vmadl $v23, $v05, $v07.e2                          ## L:220  |     30 | nextPosFloor:sint = ONE +* SPHERE_RAD:sfract.z;
-  addu $t1, $t1, $t3                                 ## L:205  |      ^ | totalDistB += distB;
-  or $t4, $t4, $t8                                   ## L:211  |     31 | isDoneA |= tmp;
-  vmadm $v22, $v04, $v07.e2                          ## L:220  |      ^ | nextPosFloor:sint = ONE +* SPHERE_RAD:sfract.z;
-  slt $t8, $a0, $t1                                  ## L:212  |     32 | tmp = totalDistB > RENDER_DIST;
-  sw $t0, 40($zero)                                  ## L:225  |     33 | store(totalDistA, ZERO, 40);
-  slt $t7, $t3, $a1                                  ## L:208  |     34 | u8 isDoneB = distB < STOP_DIST;
-  vmadn $v23, $v00, $v00                             ## L:220  |      ^ | nextPosFloor:sint = ONE +* SPHERE_RAD:sfract.z;
-  vsub $v20, $v20, $v22.v                            ## L:222  |     35 | nextPos:sint -= nextPosFloor:sint;
-  beq $t4, $t5, markDoneA                            ## L:227  |      ^ | if(isDoneA == isDoneAFlag)goto markDoneA;
-  or $t7, $t7, $t8                                   ## L:213  |    *37 | isDoneB |= tmp;
+  vaddc $v17, $v17, $v15.v                           ## L:190  |      ^ | totalDist += res;
+  vadd $v16, $v16, $v14.v                            ## L:190  |     17 | totalDist += res;
+  lsv $v13, 12, 54, $zero                            ## L:188  |      ^ | rayDir.Z = load(ZERO, 52).x;
+  vmudl $v29, $v05, $v11.v                           ## L:210  |     18 | nextPos = ONE * rayPosOrg;
+  ssv $v14, 8, 68, $zero                             ## L:193  |      ^ | @Barrier("lenB") store(res.X, ZERO, 68); ## Barrier: 0x2
+  vmadm $v29, $v04, $v11.v                           ## L:210  |     19 | nextPos = ONE * rayPosOrg;
+  lsv $v12, 12, 52, $zero                            ## L:188  |      ^ | rayDir.Z = load(ZERO, 52).x;
+  vmadn $v19, $v05, $v10.v                           ## L:210  |     20 | nextPos = ONE * rayPosOrg;
+  ssv $v15, 8, 70, $zero                             ## L:193  |      ^ | @Barrier("lenB") store(res.X, ZERO, 68); ## Barrier: 0x2
+  vmadh $v18, $v04, $v10.v                           ## L:210  |     21 | nextPos = ONE * rayPosOrg;
+  vmadl $v29, $v13, $v17.h0                          ## L:211  |     22 | nextPos = rayDir +* totalDist.xxxxXXXX;
+  ssv $v14, 0, 36, $zero                             ## L:192  |      ^ | @Barrier("lenA") store(res.x, ZERO, 36); ## Barrier: 0x1
+  ssv $v15, 0, 38, $zero                             ## L:192  |     23 | @Barrier("lenA") store(res.x, ZERO, 36); ## Barrier: 0x1
+  vmadm $v29, $v12, $v17.h0                          ## L:211  |      ^ | nextPos = rayDir +* totalDist.xxxxXXXX;
+  lw $t3, 68($zero)                                  ## L:196  |     24 | @Barrier("lenB") distB = load(ZERO, 68); ## Barrier: 0x2
+  vmadn $v19, $v13, $v16.h0                          ## L:211  |      ^ | nextPos = rayDir +* totalDist.xxxxXXXX;
+  vmadh $v18, $v12, $v16.h0                          ## L:211  |     25 | nextPos = rayDir +* totalDist.xxxxXXXX;
+  lw $t2, 36($zero)                                  ## L:195  |      ^ | @Barrier("lenA") distA = load(ZERO, 36); ## Barrier: 0x1
+  vmadl $v21, $v05, $v07.e2                          ## L:214  |     26 | nextPosFloor:sint = ONE +* SPHERE_RAD:sfract.z;
+  vmadm $v20, $v04, $v07.e2                          ## L:214  |     27 | nextPosFloor:sint = ONE +* SPHERE_RAD:sfract.z;
+  addu $t1, $t1, $t3                                 ## L:199  |      ^ | totalDistB += distB;
+  slt $t7, $t2, $a1                                  ## L:201  |     28 | u8 isDoneA = distA < STOP_DIST;
+  addu $t0, $t0, $t2                                 ## L:198  |     29 | totalDistA += distA;
+  slt $t8, $t3, $a1                                  ## L:202  |     30 | u8 isDoneB = distB < STOP_DIST;
+  vmadn $v21, $v00, $v00                             ## L:214  |      ^ | nextPosFloor:sint = ONE +* SPHERE_RAD:sfract.z;
+  vsub $v18, $v18, $v20.v                            ## L:216  |     31 | nextPos:sint -= nextPosFloor:sint;
+  slt $t4, $a0, $t0                                  ## L:204  |      ^ | tmp = totalDistA > RENDER_DIST;
+  or $t7, $t7, $t4                                   ## L:205  |     32 | isDoneA |= tmp;
+  slt $t4, $a0, $t1                                  ## L:206  |     33 | tmp = totalDistB > RENDER_DIST;
+  vmudl $v29, $v19, $v19.v                           ## L:219  |      ^ | posSq:sfract = nextPos * nextPos;
+  vmadm $v29, $v18, $v19.v                           ## L:219  |    *35 | posSq:sfract = nextPos * nextPos;
+  or $t8, $t8, $t4                                   ## L:207  |      ^ | isDoneB |= tmp;
+  vmadn $v02, $v19, $v18.v                           ## L:219  |     36 | posSq:sfract = nextPos * nextPos;
+  beq $t7, $t5, markDoneA                            ## L:221  |      ^ | if(isDoneA == isDoneAFlag)goto markDoneA;
+  nop                                                ## L:362  |    *38 | 
   __RET_MARK_DONE_A:
-  vmudl $v29, $v21, $v21.v                           ## L:230  |     38 | posSq:sfract = nextPos * nextPos;
-  sw $t1, 72($zero)                                  ## L:231  |      ^ | store(totalDistB, ZERO, 72);
-  vmadm $v29, $v20, $v21.v                           ## L:230  |     39 | posSq:sfract = nextPos * nextPos;
-  beq $t7, $t6, markDoneB                            ## L:233  |      ^ | if(isDoneB == isDoneBFlag)goto markDoneB;
-  vmadn $v15, $v21, $v20.v                           ## L:230  |    *41 | posSq:sfract = nextPos * nextPos;
+  vaddc $v15, $v02, $v02.h2                          ## L:224  |    *40 | res = posSq:sfract + posSq:sfract.zzzzZZZZ;
+  beq $t8, $t6, markDoneB                            ## L:226  |      ^ | if(isDoneB == isDoneBFlag)goto markDoneB;
+  vadd $v14, $v00, $v00.h2                           ## L:224  |    *42 | res = posSq:sfract + posSq:sfract.zzzzZZZZ;
   __RET_MARK_DONE_B:
-  vrsqh $v24.e0, $v00.e0                             ## L:123  |     42 | asm_op("vrsqh", out:sint.x, VZERO.x);
-  vaddc $v17, $v15, $v15.h2                          ## L:236  |   **45 | res = posSq:sfract + posSq:sfract.zzzzZZZZ;
-  ssv $v20, 2, 28, $zero                             ## L:239  |      ^ | @Barrier("p.y") store(nextPos.y, ZERO, 28); ## Barrier: 0x8
-  ssv $v21, 2, 30, $zero                             ## L:239  |     46 | @Barrier("p.y") store(nextPos.y, ZERO, 28); ## Barrier: 0x8
-  ssv $v20, 4, 32, $zero                             ## L:240  |     47 | @Barrier("p.z") store(nextPos.z, ZERO, 32); ## Barrier: 0x10
-  vadd $v16, $v00, $v00.h2                           ## L:236  |      ^ | res = posSq:sfract + posSq:sfract.zzzzZZZZ;
-  ssv $v20, 0, 24, $zero                             ## L:238  |     48 | @Barrier("p.x") store(nextPos.x, ZERO, 24); ## Barrier: 0x4
-  ssv $v20, 12, 64, $zero                            ## L:244  |     49 | @Barrier("p.Z") store(nextPos.Z, ZERO, 64); ## Barrier: 0x80
-  vrsql $v25.e0, $v17.e0                             ## L:124  |      ^ | asm_op("vrsql", out:sfract.x, in:sfract.x);
-  ssv $v20, 8, 56, $zero                             ## L:242  |     50 | @Barrier("p.X") store(nextPos.X, ZERO, 56); ## Barrier: 0x20
-  vrsqh $v24.e0, $v00.e4                             ## L:131  |      ^ | asm_op("vrsqh", out:sint.X, VZERO.X);
-  vrsql $v25.e4, $v17.e4                             ## L:132  |     51 | asm_op("vrsql", out:sfract.X, in:sfract.X);
-  vrsqh $v24.e4, $v00.e0                             ## L:133  |     52 | asm_op("vrsqh", out:sint.X, VZERO.x);
-  ssv $v21, 0, 26, $zero                             ## L:238  |      ^ | @Barrier("p.x") store(nextPos.x, ZERO, 24); ## Barrier: 0x4
-  ssv $v21, 8, 58, $zero                             ## L:242  |     53 | @Barrier("p.X") store(nextPos.X, ZERO, 56); ## Barrier: 0x20
-  ssv $v21, 4, 34, $zero                             ## L:240  |     54 | @Barrier("p.z") store(nextPos.z, ZERO, 32); ## Barrier: 0x10
-  vaddc $v23, $v17, $v15.h1                          ## L:256  |      ^ | tmpA = res:sfract + posSq:sfract.yyyyYYYY;
-  vadd $v22, $v00, $v00.h1                           ## L:256  |     55 | tmpA = res:sfract + posSq:sfract.yyyyYYYY;
-  vmudm $v16, $v24, $v31.e7                          ## L:139  |     56 | asm_op("vmudm", out:sint,   in:sint,   VSHIFT8.W);
-  vmadl $v17, $v25, $v31.e7                          ## L:140  |     57 | asm_op("vmadl", out:sfract, in:sfract, VSHIFT8.W);
-  vrsqh $v26.e0, $v00.e0                             ## L:123  |     58 | asm_op("vrsqh", out:sint.x, VZERO.x);
-  vrsql $v27.e0, $v23.e0                             ## L:124  |     59 | asm_op("vrsql", out:sfract.x, in:sfract.x);
-  vrsqh $v26.e0, $v00.e0                             ## L:125  |     60 | asm_op("vrsqh", out:sint.x, VZERO.x);
-  vrcph $v29.e0, $v16.e0                             ## L:263  |     61 | tmpB:sfract.x = invert_half(res).x;
-  vrcpl $v25.e0, $v17.e0                             ## L:263  |     62 | tmpB:sfract.x = invert_half(res).x;
-  vrcph $v29.e4, $v16.e4                             ## L:264  |     63 | tmpB:sfract.X = invert_half(res).X;
-  vrcpl $v25.e4, $v17.e4                             ## L:264  |     64 | tmpB:sfract.X = invert_half(res).X;
-  mfc2 $at, $v26.e0                                  ## L:261  |      ^ | s32 resSphereA = resSphere.x;
-  vrsqh $v26.e4, $v00.e4                             ## L:131  |     65 | asm_op("vrsqh", out:sint.X, VZERO.X);
-  mfc2 $t8, $v27.e0                                  ## L:261  |      ^ | s32 resSphereA = resSphere.x;
-  vrsql $v27.e4, $v23.e4                             ## L:132  |     66 | asm_op("vrsql", out:sfract.X, in:sfract.X);
-  vrsqh $v26.e4, $v00.e0                             ## L:133  |     67 | asm_op("vrsqh", out:sint.X, VZERO.x);
-  sll $at, $at, 16                                   ## L:261  |      ^ | s32 resSphereA = resSphere.x;
-  andi $t8, $t8, 65535                               ## L:261  |     68 | s32 resSphereA = resSphere.x;
-  vsubc $v17, $v25, $v07.e0                          ## L:274  |      ^ | res:ufract = tmpB:ufract - SPHERE_RAD:ufract.x;
-  vsub $v16, $v00, $v06.e0                           ## L:275  |     69 | res:sint = VZERO - SPHERE_RAD:sint.x;
-  or $t8, $t8, $at                                   ## L:261  |      ^ | s32 resSphereA = resSphere.x;
-  mfc2 $t9, $v27.e4                                  ## L:267  |     70 | s32 resSphereB = resSphere.X;
-  mfc2 $at, $v26.e4                                  ## L:267  |     71 | s32 resSphereB = resSphere.X;
-  sra $t8, $t8, 8                                    ## L:269  |     72 | resSphereA >>= 8;
-  vmudl $v29, $v17, $v17.v                           ## L:277  |      ^ | res:sfract = res * res;
-  vmadm $v29, $v16, $v17.v                           ## L:277  |     73 | res:sfract = res * res;
-  andi $t9, $t9, 65535                               ## L:267  |      ^ | s32 resSphereB = resSphere.X;
-  sll $at, $at, 16                                   ## L:267  |     74 | s32 resSphereB = resSphere.X;
-  vmadn $v17, $v17, $v16.v                           ## L:277  |      ^ | res:sfract = res * res;
-  or $t9, $t9, $at                                   ## L:267  |     75 | s32 resSphereB = resSphere.X;
-  vmadl $v29, $v05, $v15.h1                          ## L:278  |      ^ | tmpA = ONE +* posSq.yyyyYYYY;
-  vmadm $v29, $v04, $v15.h1                          ## L:278  |     76 | tmpA = ONE +* posSq.yyyyYYYY;
-  sra $t9, $t9, 8                                    ## L:270  |      ^ | resSphereB >>= 8;
-  vmadn $v23, $v05, $v14.h1                          ## L:278  |     77 | tmpA = ONE +* posSq.yyyyYYYY;
-  sw $t8, 120($zero)                                 ## L:271  |      ^ | @Barrier("a") store(resSphereA, ZERO, 120); ## Barrier: 0x100
-  vmadh $v22, $v04, $v14.h1                          ## L:278  |     78 | tmpA = ONE +* posSq.yyyyYYYY;
-  lsv $v24, 0, 120, $zero                            ## L:280  |      ^ | @Barrier("a") tmpB.x = load(ZERO, 120).x; ## Barrier: 0x100
-  sw $t9, 124($zero)                                 ## L:272  |     79 | @Barrier("b") store(resSphereB, ZERO, 124); ## Barrier: 0x200
-  lsv $v25, 0, 122, $zero                            ## L:280  |     80 | @Barrier("a") tmpB.x = load(ZERO, 120).x; ## Barrier: 0x100
-  vrsqh $v16.e0, $v00.e0                             ## L:123  |      ^ | asm_op("vrsqh", out:sint.x, VZERO.x);
-  vrsql $v17.e0, $v23.e0                             ## L:124  |     81 | asm_op("vrsql", out:sfract.x, in:sfract.x);
-  lsv $v24, 8, 124, $zero                            ## L:281  |      ^ | @Barrier("b") tmpB.X = load(ZERO, 124).x; ## Barrier: 0x200
-  vrsqh $v16.e0, $v00.e4                             ## L:131  |     82 | asm_op("vrsqh", out:sint.X, VZERO.X);
-  lsv $v25, 8, 126, $zero                            ## L:281  |      ^ | @Barrier("b") tmpB.X = load(ZERO, 124).x; ## Barrier: 0x200
-  vrsql $v17.e4, $v23.e4                             ## L:132  |     83 | asm_op("vrsql", out:sfract.X, in:sfract.X);
-  vrsqh $v16.e4, $v00.e0                             ## L:133  |     84 | asm_op("vrsqh", out:sint.X, VZERO.x);
-  vrcph $v29.e0, $v24.e0                             ## L:289  |     85 | resSphere:sfract.x = invert_half(tmpB).x;
-  vrcpl $v27.e0, $v25.e0                             ## L:289  |     86 | resSphere:sfract.x = invert_half(tmpB).x;
-  vmudm $v22, $v16, $v31.e7                          ## L:139  |    *88 | asm_op("vmudm", out:sint,   in:sint,   VSHIFT8.W);
-  vmadl $v23, $v17, $v31.e7                          ## L:140  |     89 | asm_op("vmadl", out:sfract, in:sfract, VSHIFT8.W);
-  vrcph $v29.e4, $v24.e4                             ## L:294  |     90 | resSphere:sfract.X = invert_half(tmpB).X;
-  vrcpl $v27.e4, $v25.e4                             ## L:294  |     91 | resSphere:sfract.X = invert_half(tmpB).X;
-  vrcph $v29.e0, $v22.e0                             ## L:296  |     92 | res:sfract.x = invert_half(tmpA).x;
-  vrcpl $v17.e0, $v23.e0                             ## L:296  |     93 | res:sfract.x = invert_half(tmpA).x;
-  vrcph $v29.e4, $v22.e4                             ## L:297  |     94 | res:sfract.X = invert_half(tmpA).X;
-  vrcpl $v17.e4, $v23.e4                             ## L:297  |     95 | res:sfract.X = invert_half(tmpA).X;
-  vsubc $v27, $v27, $v07.e0                          ## L:299  |     96 | resSphere:ufract = resSphere:ufract - SPHERE_RAD:ufract.x;
-  vsub $v26, $v00, $v00.v                            ## L:300  |     97 | resSphere:sint = VZERO - VZERO;
-  vsubc $v17, $v17, $v07.e1                          ## L:302  |    *99 | res:ufract = res:ufract - SPHERE_RAD:ufract.y;
-  vsub $v16, $v00, $v00.v                            ## L:303  |    100 | res:sint = VZERO - VZERO;
-  vmudl $v27, $v27, $v09.h1                          ## L:310  |    101 | resSphere = resSphere * LERP_FACTOR:ufract.yyyyYYYY;
-  vmadm $v26, $v26, $v09.h1                          ## L:310  |    102 | resSphere = resSphere * LERP_FACTOR:ufract.yyyyYYYY;
-  ssv $v21, 12, 66, $zero                            ## L:244  |      ^ | @Barrier("p.Z") store(nextPos.Z, ZERO, 64); ## Barrier: 0x80
-  vmadn $v27, $v00, $v00                             ## L:310  |    103 | resSphere = resSphere * LERP_FACTOR:ufract.yyyyYYYY;
-  ssv $v20, 10, 60, $zero                            ## L:243  |      ^ | @Barrier("p.Y") store(nextPos.Y, ZERO, 60); ## Barrier: 0x40
-  vmadl $v17, $v17, $v09.h0                          ## L:311  |    104 | res = res +* LERP_FACTOR:ufract.xxxxXXXX;
-  ssv $v21, 10, 62, $zero                            ## L:243  |      ^ | @Barrier("p.Y") store(nextPos.Y, ZERO, 60); ## Barrier: 0x40
-  vmadm $v16, $v16, $v09.h0                          ## L:311  |    105 | res = res +* LERP_FACTOR:ufract.xxxxXXXX;
-  j LABEL_RayMarch_0001                              ## L:311  |      ^ | res = res +* LERP_FACTOR:ufract.xxxxXXXX;
-  vmadn $v17, $v00, $v00                             ## L:311  |   *107 | res = res +* LERP_FACTOR:ufract.xxxxXXXX;
-  LOOP_END:
-   # inline-ASM                                      ## L:317  |      0 | asm("");
-  break # inline-ASM                                 ## L:318  |      0 | asm("break");
+  lsv $v09, 8, 76, $zero                             ## L:232  |     43 | LERP_FACTOR:ufract.X = load(ZERO, 76).x;
+  vrsqh $v22.e0, $v00.e0                             ## L:123  |      ^ | asm_op("vrsqh", out:sint.x, VZERO.x);
+  lsv $v09, 0, 76, $zero                             ## L:230  |     44 | LERP_FACTOR:ufract.x = load(ZERO, 76).x;
+  vrsql $v23.e0, $v15.e0                             ## L:124  |      ^ | asm_op("vrsql", out:sfract.x, in:sfract.x);
+  lsv $v09, 2, 78, $zero                             ## L:231  |     45 | LERP_FACTOR:ufract.y = load(ZERO, 78).x;
+  vrsqh $v22.e0, $v00.e4                             ## L:131  |      ^ | asm_op("vrsqh", out:sint.X, VZERO.X);
+  lsv $v09, 10, 78, $zero                            ## L:233  |     46 | LERP_FACTOR:ufract.Y = load(ZERO, 78).x;
+  vrsql $v23.e4, $v15.e4                             ## L:132  |      ^ | asm_op("vrsql", out:sfract.X, in:sfract.X);
+  vrsqh $v22.e4, $v00.e0                             ## L:133  |     47 | asm_op("vrsqh", out:sint.X, VZERO.x);
+  vaddc $v21, $v15, $v02.h1                          ## L:244  |     48 | tmpA = res:sfract + posSq:sfract.yyyyYYYY;
+  vadd $v20, $v00, $v00.h1                           ## L:244  |     49 | tmpA = res:sfract + posSq:sfract.yyyyYYYY;
+  vmudm $v14, $v22, $v31.e7                          ## L:139  |    *51 | asm_op("vmudm", out:sint,   in:sint,   VSHIFT8.W);
+  vmadl $v15, $v23, $v31.e7                          ## L:140  |     52 | asm_op("vmadl", out:sfract, in:sfract, VSHIFT8.W);
+  vrsqh $v24.e0, $v00.e0                             ## L:123  |     53 | asm_op("vrsqh", out:sint.x, VZERO.x);
+  vrsql $v25.e0, $v21.e0                             ## L:124  |     54 | asm_op("vrsql", out:sfract.x, in:sfract.x);
+  vrsqh $v24.e0, $v00.e0                             ## L:125  |     55 | asm_op("vrsqh", out:sint.x, VZERO.x);
+  vrcph $v29.e0, $v14.e0                             ## L:251  |     56 | tmpB:sfract.x = invert_half(res).x;
+  vrcpl $v23.e0, $v15.e0                             ## L:251  |     57 | tmpB:sfract.x = invert_half(res).x;
+  vrcph $v29.e4, $v14.e4                             ## L:252  |     58 | tmpB:sfract.X = invert_half(res).X;
+  vrcpl $v23.e4, $v15.e4                             ## L:252  |     59 | tmpB:sfract.X = invert_half(res).X;
+  mfc2 $at, $v24.e0                                  ## L:249  |      ^ | s32 resSphereA = resSphere.x;
+  mfc2 $t9, $v25.e0                                  ## L:249  |     60 | s32 resSphereA = resSphere.x;
+  vrsqh $v24.e4, $v00.e4                             ## L:131  |      ^ | asm_op("vrsqh", out:sint.X, VZERO.X);
+  vrsql $v25.e4, $v21.e4                             ## L:132  |     61 | asm_op("vrsql", out:sfract.X, in:sfract.X);
+  vrsqh $v24.e4, $v00.e0                             ## L:133  |     62 | asm_op("vrsqh", out:sint.X, VZERO.x);
+  sll $at, $at, 16                                   ## L:249  |      ^ | s32 resSphereA = resSphere.x;
+  andi $t9, $t9, 65535                               ## L:249  |     63 | s32 resSphereA = resSphere.x;
+  vsubc $v15, $v23, $v07.e0                          ## L:262  |      ^ | res:ufract = tmpB:ufract - SPHERE_RAD:ufract.x;
+  or $t9, $t9, $at                                   ## L:249  |     64 | s32 resSphereA = resSphere.x;
+  vsub $v14, $v00, $v06.e0                           ## L:263  |      ^ | res:sint = VZERO - SPHERE_RAD:sint.x;
+  sra $t9, $t9, 8                                    ## L:257  |     65 | resSphereA >>= 8;
+  sw $t9, 120($zero)                                 ## L:259  |    *67 | @Barrier("a") store(resSphereA, ZERO, 120); ## Barrier: 0x4
+  vmudl $v29, $v15, $v15.v                           ## L:265  |      ^ | res:sfract = res * res;
+  vmadm $v29, $v14, $v15.v                           ## L:265  |     68 | res:sfract = res * res;
+  mfc2 $at, $v24.e4                                  ## L:255  |      ^ | s32 resSphereB = resSphere.X;
+  vmadn $v15, $v15, $v14.v                           ## L:265  |     69 | res:sfract = res * res;
+  mfc2 $k0, $v25.e4                                  ## L:255  |      ^ | s32 resSphereB = resSphere.X;
+  vmadl $v29, $v05, $v02.h1                          ## L:266  |     70 | tmpA = ONE +* posSq.yyyyYYYY;
+  lsv $v22, 0, 120, $zero                            ## L:268  |      ^ | @Barrier("a") tmpB.x = load(ZERO, 120).x; ## Barrier: 0x4
+  sll $at, $at, 16                                   ## L:255  |     71 | s32 resSphereB = resSphere.X;
+  vmadm $v29, $v04, $v02.h1                          ## L:266  |      ^ | tmpA = ONE +* posSq.yyyyYYYY;
+  lsv $v23, 0, 122, $zero                            ## L:268  |     72 | @Barrier("a") tmpB.x = load(ZERO, 120).x; ## Barrier: 0x4
+  vmadn $v21, $v05, $v01.h1                          ## L:266  |      ^ | tmpA = ONE +* posSq.yyyyYYYY;
+  andi $k0, $k0, 65535                               ## L:255  |     73 | s32 resSphereB = resSphere.X;
+  vmadh $v20, $v04, $v01.h1                          ## L:266  |      ^ | tmpA = ONE +* posSq.yyyyYYYY;
+  or $k0, $k0, $at                                   ## L:255  |     74 | s32 resSphereB = resSphere.X;
+  sra $k0, $k0, 8                                    ## L:258  |     75 | resSphereB >>= 8;
+  vrsqh $v14.e0, $v00.e0                             ## L:123  |      ^ | asm_op("vrsqh", out:sint.x, VZERO.x);
+  vrsql $v15.e0, $v21.e0                             ## L:124  |     76 | asm_op("vrsql", out:sfract.x, in:sfract.x);
+  sw $k0, 124($zero)                                 ## L:260  |      ^ | @Barrier("b") store(resSphereB, ZERO, 124); ## Barrier: 0x8
+  vrsqh $v14.e0, $v00.e4                             ## L:131  |     77 | asm_op("vrsqh", out:sint.X, VZERO.X);
+  lsv $v22, 8, 124, $zero                            ## L:269  |      ^ | @Barrier("b") tmpB.X = load(ZERO, 124).x; ## Barrier: 0x8
+  vrsql $v15.e4, $v21.e4                             ## L:132  |     78 | asm_op("vrsql", out:sfract.X, in:sfract.X);
+  lsv $v23, 8, 126, $zero                            ## L:269  |      ^ | @Barrier("b") tmpB.X = load(ZERO, 124).x; ## Barrier: 0x8
+  vrsqh $v14.e4, $v00.e0                             ## L:133  |     79 | asm_op("vrsqh", out:sint.X, VZERO.x);
+  vrcph $v29.e0, $v22.e0                             ## L:277  |    *81 | resSphere:sfract.x = invert_half(tmpB).x;
+  vrcpl $v25.e0, $v23.e0                             ## L:277  |     82 | resSphere:sfract.x = invert_half(tmpB).x;
+  vmudm $v20, $v14, $v31.e7                          ## L:139  |     83 | asm_op("vmudm", out:sint,   in:sint,   VSHIFT8.W);
+  vmadl $v21, $v15, $v31.e7                          ## L:140  |     84 | asm_op("vmadl", out:sfract, in:sfract, VSHIFT8.W);
+  vrcph $v29.e4, $v22.e4                             ## L:282  |     85 | resSphere:sfract.X = invert_half(tmpB).X;
+  vrcpl $v25.e4, $v23.e4                             ## L:282  |     86 | resSphere:sfract.X = invert_half(tmpB).X;
+  vrcph $v29.e0, $v20.e0                             ## L:284  |     87 | res:sfract.x = invert_half(tmpA).x;
+  vrcpl $v15.e0, $v21.e0                             ## L:284  |     88 | res:sfract.x = invert_half(tmpA).x;
+  vrcph $v29.e4, $v20.e4                             ## L:285  |     89 | res:sfract.X = invert_half(tmpA).X;
+  vrcpl $v15.e4, $v21.e4                             ## L:285  |     90 | res:sfract.X = invert_half(tmpA).X;
+  vsubc $v25, $v25, $v07.e0                          ## L:287  |     91 | resSphere:ufract = resSphere:ufract - SPHERE_RAD:ufract.x;
+  vsub $v24, $v00, $v00.v                            ## L:288  |     92 | resSphere:sint = VZERO - VZERO;
+  vsubc $v15, $v15, $v07.e1                          ## L:290  |    *94 | res:ufract = res:ufract - SPHERE_RAD:ufract.y;
+  vsub $v14, $v00, $v00.v                            ## L:291  |     95 | res:sint = VZERO - VZERO;
+  vmudl $v25, $v25, $v09.h1                          ## L:294  |     96 | resSphere = resSphere * LERP_FACTOR:ufract.yyyyYYYY;
+  vmadm $v24, $v24, $v09.h1                          ## L:294  |     97 | resSphere = resSphere * LERP_FACTOR:ufract.yyyyYYYY;
+  vmadn $v25, $v00, $v00                             ## L:294  |     98 | resSphere = resSphere * LERP_FACTOR:ufract.yyyyYYYY;
+  vmadl $v15, $v15, $v09.h0                          ## L:295  |     99 | res = res +* LERP_FACTOR:ufract.xxxxXXXX;
+  vmadm $v14, $v14, $v09.h0                          ## L:295  |    100 | res = res +* LERP_FACTOR:ufract.xxxxXXXX;
+  j LABEL_RayMarch_0001                              ## L:295  |      ^ | res = res +* LERP_FACTOR:ufract.xxxxXXXX;
+  vmadn $v15, $v00, $v00                             ## L:295  |   *102 | res = res +* LERP_FACTOR:ufract.xxxxXXXX;
   markDoneA:
-  vmov $v09.e0, $v00.e0                              ## L:322  |    108 | LERP_FACTOR:ufract.x = 0;
-  addiu $t5, $zero, 255                              ## L:324  |      ^ | isDoneAFlag = 0xFF;
-  beq $t5, $t6, LOOP_END                             ## L:325  |    109 | if(isDoneAFlag == isDoneBFlag)goto LOOP_END;
-  nop                                                ## L:381  |   *111 | 
-  j __RET_MARK_DONE_A                                ## L:328  |    112 | goto __RET_MARK_DONE_A;
-  vmov $v09.e1, $v00.e0                              ## L:327  |   *114 | LERP_FACTOR:ufract.y = 0;
+  addiu $t5, $zero, 255                              ## L:303  |    103 | isDoneAFlag = 0xFF;
+  bne $t5, $t6, __RET_MARK_DONE_A                    ## L:304  |    104 | if(isDoneAFlag != isDoneBFlag)goto __RET_MARK_DONE_A;
+  sw $t0, 40($zero)                                  ## L:302  |   *106 | store(totalDistA, ZERO, 40);
+  break # inline-ASM                                 ## L:305  |      0 | asm("break");
   markDoneB:
-  addiu $t6, $zero, 255                              ## L:335  |    115 | isDoneBFlag = 0xFF;
-  beq $t5, $t6, LOOP_END                             ## L:336  |    116 | if(isDoneAFlag == isDoneBFlag)goto LOOP_END;
-  vmov $v09.e4, $v00.e0                              ## L:333  |   *118 | LERP_FACTOR:ufract.X = 0;
-  j __RET_MARK_DONE_B                                ## L:339  |    119 | goto __RET_MARK_DONE_B;
-  vmov $v09.e5, $v00.e0                              ## L:338  |   *121 | LERP_FACTOR:ufract.Y = 0;
+  addiu $t6, $zero, 255                              ## L:311  |    107 | isDoneBFlag = 0xFF;
+  bne $t5, $t6, __RET_MARK_DONE_B                    ## L:312  |    108 | if(isDoneAFlag != isDoneBFlag)goto __RET_MARK_DONE_B;
+  sw $t1, 72($zero)                                  ## L:310  |   *110 | store(totalDistB, ZERO, 72);
+  break # inline-ASM                                 ## L:313  |      0 | asm("break");
 
 OVERLAY_CODE_END:
 

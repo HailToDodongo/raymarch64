@@ -91,14 +91,6 @@ namespace UCode
     UCODE_DMEM->rayDirB[2] = dirB.z.val;
   }
 
-  inline FP32Vec3 getHitPos(int idx) {
-    return {
-      idx == 0 ? UCODE_DMEM->hitPosA[0] : UCODE_DMEM->hitPosB[0],
-      idx == 0 ? UCODE_DMEM->hitPosA[1] : UCODE_DMEM->hitPosB[1],
-      idx == 0 ? UCODE_DMEM->hitPosA[2] : UCODE_DMEM->hitPosB[2],
-    };
-  }
-
   inline FP32 getTotalDist(int idx) {
     FP32 distTotal;
     distTotal.val = idx == 0 ? UCODE_DMEM->totalDistA : UCODE_DMEM->totalDistB;

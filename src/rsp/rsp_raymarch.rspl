@@ -144,7 +144,6 @@ macro unsafeVSR8(vec32 out, vec32 in)
 function RayMarch()
 {
   // globals, loaded once and preserved across this function call
-  vec32<$v02> s;
   vec32<$v04> ONE;
   vec32<$v06> SPHERE_RAD;
   vec32<$v08> LERP_FACTOR;
@@ -153,17 +152,6 @@ function RayMarch()
   s32<$a1> STOP_DIST;
 
   vec32<$v12> rayDir;
-  ///rayDir = load(ZERO, DMEM_RAYDIR_A);
-
-  // @TODO: 16bit fractional?
-  rayDir.x = load(ZERO, DMEM_RAYDIR_A_X).x;
-  rayDir.y = load(ZERO, DMEM_RAYDIR_A_Y).x;
-  rayDir.z = load(ZERO, DMEM_RAYDIR_A_Z).x;
-
-  rayDir.X = load(ZERO, DMEM_RAYDIR_B_X).x;
-  rayDir.Y = load(ZERO, DMEM_RAYDIR_B_Y).x;
-  rayDir.Z = load(ZERO, DMEM_RAYDIR_B_Z).x;
-
 
   u8<$t5> isDoneAFlag = 1;
   u8<$t6> isDoneBFlag = 1;
@@ -181,18 +169,24 @@ function RayMarch()
   res.x = load(ZERO, DMEM_INIT_DIST).x;
   res = res.x;
 
-  LERP_FACTOR:ufract.x = load(ZERO, DMEM_LERP_A).x;
-  LERP_FACTOR:ufract.y = load(ZERO, DMEM_LERP_B).x;
-  LERP_FACTOR:ufract.X = LERP_FACTOR:ufract.x;
-  LERP_FACTOR:ufract.Y = LERP_FACTOR:ufract.y;
-
   vec32 totalDist = 0;
 
   vec32 nextPos;
   vec16 currDist;
+  u8 tmp;
+
+  // @TODO: 16bit fractional?
+  rayDir.x = load(ZERO, DMEM_RAYDIR_A_X).x;
+  rayDir.y = load(ZERO, DMEM_RAYDIR_A_Y).x;
+  rayDir.z = load(ZERO, DMEM_RAYDIR_A_Z).x;
+
+  rayDir.X = load(ZERO, DMEM_RAYDIR_B_X).x;
+  rayDir.Y = load(ZERO, DMEM_RAYDIR_B_Y).x;
 
   //u32 iterCount = 128;
   loop {
+    rayDir.Z = load(ZERO, DMEM_RAYDIR_B_Z).x;
+
     totalDist += res;
 
     @Barrier("lenA") store(res.x, ZERO, DMEM_LAST_DIST_A);
@@ -207,7 +201,7 @@ function RayMarch()
     u8 isDoneA = distA < STOP_DIST;
     u8 isDoneB = distB < STOP_DIST;
     {
-      u8 tmp = totalDistA > RENDER_DIST;
+      tmp = totalDistA > RENDER_DIST;
       isDoneA |= tmp;
       tmp = totalDistB > RENDER_DIST;
       isDoneB |= tmp;
@@ -222,27 +216,21 @@ function RayMarch()
     nextPos:sint -= nextPosFloor:sint;
     undef nextPosFloor;
 
-    store(totalDistA, ZERO, DMEM_TOTAL_DIST_A);
+    posSq:sfract = nextPos * nextPos;
 
     if(isDoneA == isDoneAFlag)goto markDoneA;
     __RET_MARK_DONE_A:
 
-    posSq:sfract = nextPos * nextPos;
-    store(totalDistB, ZERO, DMEM_TOTAL_DIST_B);
+    res = posSq:sfract + posSq:sfract.zzzzZZZZ;
 
     if(isDoneB == isDoneBFlag)goto markDoneB;
     __RET_MARK_DONE_B:
 
-    res = posSq:sfract + posSq:sfract.zzzzZZZZ;
-
-    @Barrier("p.x") store(nextPos.x, ZERO, DMEM_HITPOS_A_X);
-    @Barrier("p.y") store(nextPos.y, ZERO, DMEM_HITPOS_A_Y);
-    @Barrier("p.z") store(nextPos.z, ZERO, DMEM_HITPOS_A_Z);
-
-    @Barrier("p.X") store(nextPos.X, ZERO, DMEM_HITPOS_B_X);
-    @Barrier("p.Y") store(nextPos.Y, ZERO, DMEM_HITPOS_B_Y);
-    @Barrier("p.Z") store(nextPos.Z, ZERO, DMEM_HITPOS_B_Z);
       //////// SDF ////////
+      LERP_FACTOR:ufract.x = load(ZERO, DMEM_LERP_A).x;
+      LERP_FACTOR:ufract.y = load(ZERO, DMEM_LERP_B).x;
+      LERP_FACTOR:ufract.X = load(ZERO, DMEM_LERP_A).x;
+      LERP_FACTOR:ufract.Y = load(ZERO, DMEM_LERP_B).x;
 
       { // Sphere & Torus
 
@@ -302,40 +290,26 @@ function RayMarch()
         res:ufract = res:ufract - SPHERE_RAD:ufract.y;
         res:sint = VZERO - VZERO; // sign extend
 
-        undef tmpA;
-        undef tmpB;
-
-
       // LERP
       resSphere = resSphere * LERP_FACTOR:ufract.yyyyYYYY;
       res = res +* LERP_FACTOR:ufract.xxxxXXXX;
     }
 
   }
-  LOOP_END:
-
-  asm("");
-  asm("break");
 
   markDoneA:
   {
-    LERP_FACTOR:ufract.x = 0;
-
+    store(totalDistA, ZERO, DMEM_TOTAL_DIST_A);
     isDoneAFlag = 0xFF; // only run this function once
-    if(isDoneAFlag == isDoneBFlag)goto LOOP_END;
-
-    LERP_FACTOR:ufract.y = 0;
-    goto __RET_MARK_DONE_A;
+    if(isDoneAFlag != isDoneBFlag)goto __RET_MARK_DONE_A;
+    asm("break");
   }
 
   markDoneB:
   {
-    LERP_FACTOR:ufract.X = 0;
-
+    store(totalDistB, ZERO, DMEM_TOTAL_DIST_B);
     isDoneBFlag = 0xFF;
-    if(isDoneAFlag == isDoneBFlag)goto LOOP_END;
-
-    LERP_FACTOR:ufract.Y = 0;
-    goto __RET_MARK_DONE_B;
+    if(isDoneAFlag != isDoneBFlag)goto __RET_MARK_DONE_B;
+    asm("break");
   }
 }
