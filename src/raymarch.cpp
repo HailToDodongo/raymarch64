@@ -21,43 +21,6 @@ extern "C" {
 }
 
 namespace {
-
-  inline float sqrtfApprox(float x)
-  {
-    int32_t i = std::bit_cast<int32_t>(x);
-    i  += 127 << 23;
-    i >>= 1;
-    return std::bit_cast<float>(i);
-  }
-
-  inline float dot(const fm_vec3_t& a, const fm_vec3_t& b) {
-      return a.x*b.x + a.y*b.y + a.z*b.z;
-  }
-
-  inline float length(const fm_vec3_t& v) {
-      return std::sqrt(dot(v,v));
-  }
-  inline fm_vec3_t normalize(const fm_vec3_t& v) {
-      float len = length(v);
-
-      if(len < 0.0001f) return v;
-      len = 1.0f / len;
-      return { v.x*len, v.y*len, v.z*len };
-  }
-
-  inline fm_vec3_t normalizeUnsafe(const fm_vec3_t& v) {
-      float len = 1.0f / length(v);
-      return { v.x*len, v.y*len, v.z*len };
-  }
-
-  inline fm_vec3_t cross(const fm_vec3_t& a, const fm_vec3_t& b) {
-      return {
-          a.y*b.z - a.z*b.y,
-          a.z*b.x - a.x*b.z,
-          a.x*b.y - a.y*b.x
-      };
-  }
-
   float lerpFactor = 0.5f;
 
   float cubeSDF(const fm_vec3_t& p) {
@@ -74,7 +37,7 @@ namespace {
       std::max(d.z, 0.0f)
     };
 
-    float distSq = dot(d, d);
+    float distSq = Math::dot(d, d);
     return std::sqrt(distSq);
   }
 
@@ -91,14 +54,14 @@ fm_vec3_t mainSDFNormals(const fm_vec3_t& p)
 {
     //auto p = fastClamp(p_);
     constexpr float r1 = 0.25f;
-    float distXZ = sqrtfApprox(p.x*p.x + p.z*p.z);
+    float distXZ = Math::sqrtfApprox(p.x*p.x + p.z*p.z);
     float qx = 1.0f - (r1 / distXZ);
     fm_vec3_t normTorus{
       p.x * qx,
       p.y,
       p.z * qx,
     };
-    return normalizeUnsafe(Math::mix(normTorus, p, lerpFactor));
+    return Math::normalizeUnsafe(Math::mix(normTorus, p, lerpFactor));
 }
 
 float mainSDF(const fm_vec3_t& p) {
@@ -132,7 +95,7 @@ float mainSDF(const fm_vec3_t& p) {
     //uint8_t colr = (res.dist / RENDER_DIST) * 255.0f;
     //return color_to_packed16({colr,colr,colr});
 
-    float light = -dot(norm, dir);
+    float light = -Math::dot(norm, dir);
     if(light < 0)light = 0;
 
     float hitPosX = camPos.x + (dir.x * dist);
@@ -195,14 +158,14 @@ void RayMarch::draw(void* fb, float time)
   camPos.x = fm_sinf(angle) * 2.5f;
   camPos.y = fm_cosf(angle-1.1f) * 2.5f;
   camPos.z = fm_sinf(angle*0.6f) * 3.5f;
-  camDir = normalize(fm_vec3_t{0,0,0} - camPos);
+  camDir = Math::normalize(fm_vec3_t{0,0,0} - camPos);
 
   float initialDist = mainSDF(Math::fastClamp(camPos));
   UCode::reset({FP32{camPos.x}, FP32{camPos.y}, FP32{camPos.z}}, lerpFactor, initialDist);
 
   constexpr fm_vec3_t worldUp{0,1,0};
-  fm_vec3_t right = normalizeUnsafe(cross(camDir, worldUp));
-  fm_vec3_t up = cross(right, camDir);
+  fm_vec3_t right = Math::normalizeUnsafe(Math::cross(camDir, worldUp));
+  fm_vec3_t up = Math::cross(right, camDir);
   auto rightStep = right * invH;
   assert(rightStep.y == 0);
 
@@ -229,13 +192,12 @@ void RayMarch::draw(void* fb, float time)
       FP32Vec3 pA, pB;
       FP32 distTotalA, distTotalB;
       bool hasResA, hasResB;
-      int iterCount;
 
       auto advanceDir = [&]() {
-        dir0 = normalizeUnsafe(rayDirXY);
+        dir0 = Math::normalizeUnsafe(rayDirXY);
         rayDirXY.x += rightStep.x;
         rayDirXY.z += rightStep.z;
-        dir1 = normalizeUnsafe(rayDirXY);
+        dir1 = Math::normalizeUnsafe(rayDirXY);
         rayDirXY.x += rightStep.x;
         rayDirXY.z += rightStep.z;
         dirFp0 = {FP32{dir0.x}, FP32{dir0.y}, FP32{dir0.z}};

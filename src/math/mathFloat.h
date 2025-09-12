@@ -129,4 +129,40 @@ namespace Math
       mix(a.z, b.z, t),
     };
   }
+
+  inline float sqrtfApprox(float x)
+  {
+    int32_t i = std::bit_cast<int32_t>(x);
+    i  += 127 << 23;
+    i >>= 1;
+    return std::bit_cast<float>(i);
+  }
+
+  inline float dot(const fm_vec3_t& a, const fm_vec3_t& b) {
+      return a.x*b.x + a.y*b.y + a.z*b.z;
+  }
+
+  inline float length(const fm_vec3_t& v) {
+      return std::sqrt(dot(v,v));
+  }
+  inline fm_vec3_t normalize(const fm_vec3_t& v) {
+      float len = length(v);
+
+      if(len < 0.0001f) return v;
+      len = 1.0f / len;
+      return { v.x*len, v.y*len, v.z*len };
+  }
+
+  inline fm_vec3_t normalizeUnsafe(const fm_vec3_t& v) {
+      float len = 1.0f / length(v);
+      return { v.x*len, v.y*len, v.z*len };
+  }
+
+  inline fm_vec3_t cross(const fm_vec3_t& a, const fm_vec3_t& b) {
+      return {
+          a.y*b.z - a.z*b.y,
+          a.z*b.x - a.x*b.z,
+          a.x*b.y - a.y*b.x
+      };
+  }
 }
