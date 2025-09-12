@@ -233,6 +233,7 @@ void RayMarch::draw(void* fb, float time)
 
       rayDirY += rayDirStepY;
       uint32_t *buffLocal = (uint32_t*)buff;
+      uint32_t col;
 
       for(int x=0; x!=W; x+=2)
       {
@@ -246,16 +247,15 @@ void RayMarch::draw(void* fb, float time)
         }
         MEMORY_BARRIER();
 
-        uint32_t col = 0;
-        if(hasResA) {
-          auto normA = mainSDFNormals(pA.toFmVec3());
-          col = shadeResult(normA, camPos, oldDir0, distTotalA.toFloat()) << 16;
-        }
+        auto applyShade = [&](const FP32Vec3 &p, const auto &distTotal, const fm_vec3_t &oldDir) {
+          auto norm = mainSDFNormals(p.toFmVec3());
+          col |= shadeResult(norm, camPos, oldDir, distTotal.toFloat());
+        };
 
-        if(hasResB) {
-          auto normB = mainSDFNormals(pB.toFmVec3());
-          col |= shadeResult(normB, camPos, oldDir1, distTotalB.toFloat()) & 0xFFFF;
-        }
+        col = 0;
+        if(hasResA)applyShade(pA, distTotalA, oldDir0);
+        col <<= 16;
+        if(hasResB)applyShade(pB, distTotalB, oldDir1);
 
         *buffLocal = col;
 
