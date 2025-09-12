@@ -47,6 +47,11 @@ namespace UCode
     while(!(*SP_STATUS & SP_STATUS_HALTED)){}
   }
 
+  inline void stop()
+  {
+    *SP_STATUS = SP_WSTATUS_SET_HALT;
+  }
+
   inline void reset(const FP32Vec3& rayPos, float lerpFactor, float initialDist)
   {
     UCODE_DMEM->pos[0] = rayPos.x.val;

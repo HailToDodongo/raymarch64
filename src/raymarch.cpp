@@ -226,6 +226,7 @@ void RayMarch::draw(void* fb, float time)
       };
 
       advanceDir();
+      UCode::stop();
 
       MEMORY_BARRIER();
       startNextUcode();
@@ -235,16 +236,14 @@ void RayMarch::draw(void* fb, float time)
       uint32_t *buffLocal = (uint32_t*)buff;
       uint32_t col;
 
+      advanceDir();
+
       for(int x=0; x!=W; x+=2)
       {
-        fm_vec3_t oldDir0 = dir0;
-        fm_vec3_t oldDir1 = dir1;
-
-        advanceDir();
         getUcodeResults();
-        if(x != (W-2)) {
-          startNextUcode();
-        }
+        // Note: this starts the RSP to prepare the next iterations result.
+        // the last iteration does so too never reading it, but getting rid of the if-check saves time
+        startNextUcode();
         MEMORY_BARRIER();
 
         auto applyShade = [&](const FP32Vec3 &p, const auto &distTotal, const fm_vec3_t &oldDir) {
@@ -253,26 +252,14 @@ void RayMarch::draw(void* fb, float time)
         };
 
         col = 0;
-        if(hasResA)applyShade(pA, distTotalA, oldDir0);
+        if(hasResA)applyShade(pA, distTotalA, dir0);
         col <<= 16;
-        if(hasResB)applyShade(pB, distTotalB, oldDir1);
+        if(hasResB)applyShade(pB, distTotalB, dir1);
 
         *buffLocal = col;
-
-        /*if(lowRes) {
-          int singleStride = stride/8/4;
-          uint64_t *buff64 = (uint64_t*)buffLocal;
-          for(int i=2; i>=0; --i) {
-            uint64_t col64 = rgba16To64(i == 0 ? (col >> 16) : (col & 0xFFFF));
-            buff64[i] = col64;
-            buff64[i + singleStride] = col64;
-            buff64[i + singleStride*2] = col64;
-            buff64[i + singleStride*3] = col64;
-          }
-          buffLocal += 3;
-        }*/
-
         ++buffLocal;
+
+        advanceDir();
       }
       buff += stride;
   }
