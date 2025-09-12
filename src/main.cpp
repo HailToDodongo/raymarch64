@@ -35,7 +35,6 @@ int main()
   vi_set_interlaced(false);
   vi_set_divot(false);
   vi_set_gamma(VI_GAMMA_DISABLE);
-  wait_ms(14);
 
   /*disable_interrupts();
     register_VI_handler(on_vi_frame_ready);
@@ -47,6 +46,7 @@ int main()
     surface_make((char*)0xA0380000, FMT_RGBA16, SCREEN_WIDTH, SCREEN_HEIGHT, FB_STRIDE),
     surface_make((char*)0xA0400000, FMT_RGBA16, SCREEN_WIDTH, SCREEN_HEIGHT, FB_STRIDE),
   };
+
   vi_show(&fbs[1]);
 
   RayMarch::init();

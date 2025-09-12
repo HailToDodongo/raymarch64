@@ -5,7 +5,10 @@ PROJECT_NAME = "raymarcher"
 
 N64_CXXFLAGS += -std=gnu++20 -Os -fno-exceptions -fsingle-precision-constant
 
-src = $(wildcard src/*.cpp) $(wildcard src/demos/*.cpp) $(wildcard src/rdp/*.cpp)
+# $(BUILD_DIR)/src/raymarch.o: N64_CXXFLAGS += -O3 -ffast-math
+
+src = $(wildcard src/*.cpp) $(wildcard src/math/*.cpp)
+src += $(wildcard src/rdp/*.cpp) $(wildcard src/rsp/*.cpp)
 
 assets_png = $(wildcard assets/*.rgba16.png)
 

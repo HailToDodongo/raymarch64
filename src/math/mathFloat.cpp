@@ -2,7 +2,7 @@
 * @copyright 2025 - Max Bebök
 * @license MIT
 */
-#include "math.h"
+#include "mathFloat.h"
 
 namespace {
   constexpr float pi_hi = 3.14159274f; // 0x1.921fb6p+01
