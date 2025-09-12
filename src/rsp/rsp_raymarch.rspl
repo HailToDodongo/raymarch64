@@ -216,15 +216,15 @@ function RayMarch()
     nextPos:sint -= nextPosFloor:sint;
     undef nextPosFloor;
 
-    posSq:sfract = nextPos * nextPos;
-
     if(isDoneA == isDoneAFlag)goto markDoneA;
     __RET_MARK_DONE_A:
 
-    res = posSq:sfract + posSq:sfract.zzzzZZZZ;
+    posSq:sfract = nextPos * nextPos;
 
     if(isDoneB == isDoneBFlag)goto markDoneB;
     __RET_MARK_DONE_B:
+
+    res = posSq:sfract + posSq:sfract.zzzzZZZZ;
 
       //////// SDF ////////
       LERP_FACTOR:ufract.x = load(ZERO, DMEM_LERP_A).x;
