@@ -195,11 +195,7 @@ void RayMarch::draw(void* fb, float time)
 
       auto advanceDir = [&]() {
         dir0 = Math::normalizeUnsafe(rayDirXY);
-        rayDirXY.x += rightStep.x;
-        rayDirXY.z += rightStep.z;
-        dir1 = Math::normalizeUnsafe(rayDirXY);
-        rayDirXY.x += rightStep.x;
-        rayDirXY.z += rightStep.z;
+        dir1 = Math::normalizeUnsafe(rayDirXY + fm_vec3_t{rightStep.x, 0, rightStep.z});
         dirFp0 = {FP32{dir0.x}, FP32{dir0.y}, FP32{dir0.z}};
         dirFp1 = {FP32{dir1.x}, FP32{dir1.y}, FP32{dir1.z}};
       };
@@ -226,6 +222,10 @@ void RayMarch::draw(void* fb, float time)
       };
 
       advanceDir();
+      rayDirXY.x += rightStep.x;
+      rayDirXY.z += rightStep.z;
+      rayDirXY.x += rightStep.x;
+      rayDirXY.z += rightStep.z;
 
       MEMORY_BARRIER();
       startNextUcode();
@@ -237,25 +237,30 @@ void RayMarch::draw(void* fb, float time)
 
       for(int x=0; x!=W; x+=2)
       {
-        fm_vec3_t oldDir0 = dir0;
-        fm_vec3_t oldDir1 = dir1;
-
         advanceDir();
+
         getUcodeResults();
         if(x != (W-2)) {
           startNextUcode();
         }
         MEMORY_BARRIER();
 
-        auto applyShade = [&](const FP32Vec3 &p, const auto &distTotal, const fm_vec3_t &oldDir) {
+        auto applyShade = [&](const FP32Vec3 &p, const auto &distTotal) {
           auto norm = mainSDFNormals(p.toFmVec3());
-          col |= shadeResult(norm, camPos, oldDir, distTotal.toFloat());
+          col |= shadeResult(norm, camPos, rayDirXY, distTotal.toFloat());
         };
 
         col = 0;
-        if(hasResA)applyShade(pA, distTotalA, oldDir0);
+        if(hasResA)applyShade(pA, distTotalA);
+
+        rayDirXY.x += rightStep.x;
+        rayDirXY.z += rightStep.z;
+
         col <<= 16;
-        if(hasResB)applyShade(pB, distTotalB, oldDir1);
+        if(hasResB)applyShade(pB, distTotalB);
+
+        rayDirXY.x += rightStep.x;
+        rayDirXY.z += rightStep.z;
 
         *buffLocal = col;
 
