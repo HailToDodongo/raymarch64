@@ -50,9 +50,17 @@ float cylinderSDF(const fm_vec3_t& p) {
     return std::sqrt(d[0]*d[0] + d[1]*d[1]);
 }
 
-fm_vec3_t mainSDFNormals(const fm_vec3_t& p)
+fm_vec3_t mainSDFNormals(const fm_vec3_t& p_)
 {
-    //auto p = fastClamp(p_);
+    /*assert(p.x > -0.5f);
+    assert(p.y > -0.5f);
+    assert(p.z > -0.5f);
+
+    assert(p.x < 0.5f);
+    assert(p.y < 0.5f);
+    assert(p.z < 0.5f);*/
+
+    auto p = Math::fastClamp(p_);
     constexpr float r1 = 0.25f;
     float distXZ = Math::sqrtfApprox(p.x*p.x + p.z*p.z);
     float qx = 1.0f - (r1 / distXZ);
@@ -87,7 +95,7 @@ float mainSDF(const fm_vec3_t& p) {
     {31.0f, 31.0f, 31.0f},
   };
 
-  uint32_t shadeResult(const fm_vec3_t &norm, const fm_vec3_t &camPos, const fm_vec3_t &dir, float dist)
+  uint32_t shadeResult(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist)
   {
     float distNorm = (RENDER_DIST - dist);
     float distNormInv = distNorm * (1.0f / RENDER_DIST);
@@ -98,9 +106,7 @@ float mainSDF(const fm_vec3_t& p) {
     float light = -Math::dot(norm, dir);
     if(light < 0)light = 0;
 
-    float hitPosX = camPos.x + (dir.x * dist);
-    float hitPosZ = camPos.z + (dir.z * dist);
-    int phase = fm_floorf(hitPosX+0.55f) * fm_floorf(hitPosZ+0.55f);
+    int phase = fm_floorf(hitPos.x+0.55f) * fm_floorf(hitPos.z+0.55f);
 
     fm_vec3_t col;
 
@@ -189,7 +195,6 @@ void RayMarch::draw(void* fb, float time)
       fm_vec3_t dir0, dir1;
       FP32Vec3 dirFp0, dirFp1;
 
-      FP32Vec3 pA, pB;
       FP32 distTotalA, distTotalB;
       bool hasResA, hasResB;
 
@@ -209,22 +214,6 @@ void RayMarch::draw(void* fb, float time)
         UCode::run(RSP_RAY_CODE_RayMarch);
       };
 
-      auto getUcodeResults = [&]() {
-        UCode::sync();
-
-        distTotalA = UCode::getTotalDist(0);
-        hasResA = distTotalA < FP32{RENDER_DIST};
-        if(hasResA) {
-          pA = UCode::getHitPos(0);
-        }
-
-        distTotalB = UCode::getTotalDist(1);
-        hasResB = distTotalB < FP32{RENDER_DIST};
-        if(hasResB) {
-          pB = UCode::getHitPos(1);
-        }
-      };
-
       advanceDir();
       UCode::stop();
 
@@ -240,21 +229,25 @@ void RayMarch::draw(void* fb, float time)
 
       for(int x=0; x!=W; x+=2)
       {
-        getUcodeResults();
+        UCode::sync();
+        distTotalA = UCode::getTotalDist(0);
+        distTotalB = UCode::getTotalDist(1);
+
         // Note: this starts the RSP to prepare the next iterations result.
         // the last iteration does so too never reading it, but getting rid of the if-check saves time
         startNextUcode();
         MEMORY_BARRIER();
 
-        auto applyShade = [&](const FP32Vec3 &p, const auto &distTotal, const fm_vec3_t &oldDir) {
-          auto norm = mainSDFNormals(p.toFmVec3());
-          col |= shadeResult(norm, camPos, oldDir, distTotal.toFloat());
+        auto applyShade = [&](float distTotal, const fm_vec3_t &oldDir) {
+          auto hitPos = camPos + (oldDir * distTotal);
+          auto norm = mainSDFNormals(hitPos);
+          col |= shadeResult(norm, hitPos, oldDir, distTotal);
         };
 
         col = 0;
-        if(hasResA)applyShade(pA, distTotalA, dir0);
+        if(distTotalA < FP32{RENDER_DIST})applyShade(distTotalA.toFloat(), dir0);
         col <<= 16;
-        if(hasResB)applyShade(pB, distTotalB, dir1);
+        if(distTotalB < FP32{RENDER_DIST})applyShade(distTotalB.toFloat(), dir1);
 
         *buffLocal = col;
         ++buffLocal;
