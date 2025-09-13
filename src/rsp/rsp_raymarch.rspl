@@ -176,16 +176,18 @@ function RayMarch()
   u8 tmp;
 
   // @TODO: 16bit fractional?
-  rayDir.x = load(ZERO, DMEM_RAYDIR_A_X).x;
-  rayDir.y = load(ZERO, DMEM_RAYDIR_A_Y).x;
-  rayDir.z = load(ZERO, DMEM_RAYDIR_A_Z).x;
+  rayDir:sint.x = load(ZERO, DMEM_RAYDIR_A_X).y;
+  rayDir:sint.y = load(ZERO, DMEM_RAYDIR_A_Y).y;
+  rayDir:sint.z = load(ZERO, DMEM_RAYDIR_A_Z).y;
 
-  rayDir.X = load(ZERO, DMEM_RAYDIR_B_X).x;
-  rayDir.Y = load(ZERO, DMEM_RAYDIR_B_Y).x;
+  rayDir:sint.X = load(ZERO, DMEM_RAYDIR_B_X).y;
+  rayDir:sint.Y = load(ZERO, DMEM_RAYDIR_B_Y).y;
+  rayDir:sint.Z = load(ZERO, DMEM_RAYDIR_B_Z).y;
+  rayDir >>= 15;
 
   //u32 iterCount = 128;
   loop {
-    rayDir.Z = load(ZERO, DMEM_RAYDIR_B_Z).x;
+
 
     totalDist += res;
 

@@ -167,7 +167,7 @@ void RayMarch::draw(void* fb, float time, bool lowRes)
   auto rightStep = right * invH;
   assert(rightStep.y == 0);
 
-  // 1239.65ms
+  // 1236.63ms
 
   buff += (OFFSET_Y * FB_STRIDE) + OFFSET_X*2;
   int stride = FB_STRIDE * (lowRes ? 4 : 1);
@@ -194,8 +194,8 @@ void RayMarch::draw(void* fb, float time, bool lowRes)
         dir1 = Math::normalizeUnsafe(rayDirXY);
         rayDirXY.x += rightStep.x;
         rayDirXY.z += rightStep.z;
-        dirFp0 = {FP32{dir0.x}, FP32{dir0.y}, FP32{dir0.z}};
-        dirFp1 = {FP32{dir1.x}, FP32{dir1.y}, FP32{dir1.z}};
+        dirFp0 = {FP32::half(dir0.x), FP32::half(dir0.y), FP32::half(dir0.z)};
+        dirFp1 = {FP32::half(dir1.x), FP32::half(dir1.y), FP32::half(dir1.z)};
       };
 
       auto startNextUcode = [&]() {

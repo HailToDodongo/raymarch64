@@ -14,6 +14,10 @@ struct FP32
   }
   constexpr FP32(int32_t v) : val(v) {}
 
+  constexpr static FP32 half(float f) {
+    return FP32{ (int32_t)(f * 0x8000) };
+  }
+
   constexpr float toFloat() const {
     return (float)((float)val * (float)(1.0 / 0x10000));
   }
