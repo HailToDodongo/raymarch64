@@ -118,8 +118,8 @@ namespace Math
   }
 
   inline float mix(float a, float b, float t) {
-    //return a * (1.0f - t) + b * t;
-    return (b - a) * t + a;
+    return a * (1.0f - t) + b * t;
+    //return (b - a) * t + a;
   }
 
   inline fm_vec3_t mix(const fm_vec3_t &a, const fm_vec3_t &b, float t) {
