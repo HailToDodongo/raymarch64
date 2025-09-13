@@ -140,8 +140,9 @@ function RayMarch()
   posSq:sint = 0;
   vec32 res;
 
-  res.x = load(ZERO, DMEM_INIT_DIST).x;
-  res = res.x;
+  res:sint = 0;
+  res:sfract.x = load(ZERO, DMEM_INIT_DIST).y;
+  res:sfract.X = load(ZERO, DMEM_INIT_DIST).y;
 
   vec32 totalDist = 0;
 
