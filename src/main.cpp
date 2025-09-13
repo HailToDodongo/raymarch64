@@ -52,6 +52,9 @@ int main()
   RayMarch::init();
   uint32_t frame = 0;
   float time = 0;
+  bool lowRes = false;
+
+  wait_ms(500);
 
   for(;;) 
   {
@@ -61,6 +64,8 @@ int main()
     Text::setFrameBuffer(*fb);
 
     joypad_poll();
+    auto press = joypad_get_buttons_pressed(JOYPAD_PORT_1);
+    if(press.a)lowRes = !lowRes;
 
     /*while(freeFB == 0) {
       vi_wait_vblank();
@@ -70,8 +75,13 @@ int main()
 
     disable_interrupts();
     //freeFB -= 1;
-    RayMarch::draw(fb->buffer, time);
+    auto ticks = get_ticks();
+    RayMarch::draw(fb->buffer, time, lowRes);
+    ticks = get_ticks() - ticks;
     enable_interrupts();
+
+    Text::printf(16, 222, "%.2fms``", TICKS_TO_US(ticks) * (1.0f / 1000.0f));
+    Text::print(280, 222, lowRes ? "1/4x" : "1x``");
 
     //vi_show(fb);
     //vi_wait_vblank();

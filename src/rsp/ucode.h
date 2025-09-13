@@ -31,10 +31,10 @@ namespace UCode
 
   inline void run(uint32_t pc = 0)
   {
-    *SP_PC = pc & 0xFFFF;
+    *SP_PC = pc;
     MEMORY_BARRIER();
     *SP_STATUS = SP_WSTATUS_CLEAR_HALT | SP_WSTATUS_CLEAR_BROKE | SP_WSTATUS_SET_INTR_BREAK;
-    *SP_STATUS = SP_WSTATUS_CLEAR_SIG0;
+//      | SP_WSTATUS_CLEAR_SIG1 | SP_WSTATUS_CLEAR_SIG2;
   }
 
   inline void resume()

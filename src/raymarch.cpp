@@ -141,12 +141,8 @@ void RayMarch::init() {
   UCode::sync();
 }
 
-void RayMarch::draw(void* fb, float time)
+void RayMarch::draw(void* fb, float time, bool lowRes)
 {
-  auto press = joypad_get_buttons_pressed(JOYPAD_PORT_1);
-  if(press.a)lowRes = !lowRes;
-
-  auto ticks = get_ticks();
   auto buff = (char*)fb;
 
   int W = OUTPUT_WIDTH / (lowRes ? 4 : 1);
@@ -256,11 +252,6 @@ void RayMarch::draw(void* fb, float time)
       }
       buff += stride;
   }
-
-  ticks = get_ticks() - ticks;
-
-  Text::printf(16, 222, "%.2fms``", TICKS_TO_US(ticks) * (1.0f / 1000.0f));
-  Text::print(280, 222, lowRes ? "1/4x" : "1x``");
 }
 
 #pragma GCC pop_options
