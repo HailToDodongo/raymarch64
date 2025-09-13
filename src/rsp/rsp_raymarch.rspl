@@ -7,33 +7,7 @@ include "rsp.inc"
 #define RSPQ_EndSavedState ;
 #define RSPQ_EmptySavedState ;
 
-#define DMEM_RAYPOS_X 0
-#define DMEM_RAYPOS_Y 4
-#define DMEM_RAYPOS_Z 8
-
-#define DMEM_RAYDIR_A_X 12
-#define DMEM_RAYDIR_A_Y 16
-#define DMEM_RAYDIR_A_Z 20
-#define DMEM_HITPOS_A_X 24
-#define DMEM_HITPOS_A_Y 28
-#define DMEM_HITPOS_A_Z 32
-#define DMEM_LAST_DIST_A 36
-#define DMEM_TOTAL_DIST_A 40
-
-#define DMEM_RAYDIR_B_X 44
-#define DMEM_RAYDIR_B_Y 48
-#define DMEM_RAYDIR_B_Z 52
-#define DMEM_HITPOS_B_X 56
-#define DMEM_HITPOS_B_Y 60
-#define DMEM_HITPOS_B_Z 64
-#define DMEM_LAST_DIST_B 68
-#define DMEM_TOTAL_DIST_B 72
-
-#define DMEM_LERP_A 76
-#define DMEM_LERP_B 78
-
-#define DMEM_INIT_DIST 80
-
+#include "dmemLayout.h"
 
 state {
   vec16 _DUMMY_;
@@ -176,13 +150,8 @@ function RayMarch()
   u8 tmp;
 
   // @TODO: 16bit fractional?
-  rayDir:sint.x = load(ZERO, DMEM_RAYDIR_A_X).y;
-  rayDir:sint.y = load(ZERO, DMEM_RAYDIR_A_Y).y;
-  rayDir:sint.z = load(ZERO, DMEM_RAYDIR_A_Z).y;
-
-  rayDir:sint.X = load(ZERO, DMEM_RAYDIR_B_X).y;
-  rayDir:sint.Y = load(ZERO, DMEM_RAYDIR_B_Y).y;
-  rayDir:sint.Z = load(ZERO, DMEM_RAYDIR_B_Z).y;
+  rayDir:sint.xyzw = load(ZERO, DMEM_RAYDIR_A).xyzw;
+  rayDir:sint.XYZW = load(ZERO, DMEM_RAYDIR_B).xyzw;
   rayDir >>= 15;
 
   //u32 iterCount = 128;

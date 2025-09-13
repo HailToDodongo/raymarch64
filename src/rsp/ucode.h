@@ -5,6 +5,7 @@
 #pragma once
 #include <libdragon.h>
 #include "rsp_raymarch_layout.h"
+#include "dmemLayout.h"
 #include "../math/mathFP.h"
 
 #define UCODE_DMEM ((volatile UCode::DMEM*)SP_DMEM)
@@ -82,13 +83,12 @@ namespace UCode
     SP_DMEM[idx+6] = (dirB.x.val << 16) | (dirB.y.val & 0xFFFF);
     SP_DMEM[idx+7] = dirB.z.val << 16;
     */
-    UCODE_DMEM->rayDirA[0] = dirA.x.val;
-    UCODE_DMEM->rayDirA[1] = dirA.y.val;
-    UCODE_DMEM->rayDirA[2] = dirA.z.val;
 
-    UCODE_DMEM->rayDirB[0] = dirB.x.val;
-    UCODE_DMEM->rayDirB[1] = dirB.y.val;
-    UCODE_DMEM->rayDirB[2] = dirB.z.val;
+    SP_DMEM[DMEM_RAYDIR_A/4 + 0] = (dirA.x.val << 16) | (dirA.y.val & 0xFFFF);
+    *((uint16_t*)&SP_DMEM[DMEM_RAYDIR_A/4 + 1]) = dirA.z.val;
+
+    SP_DMEM[DMEM_RAYDIR_B/4 + 0] = (dirB.x.val << 16) | (dirB.y.val & 0xFFFF);
+    *((uint16_t*)&SP_DMEM[DMEM_RAYDIR_B/4 + 1]) = dirB.z.val;
   }
 
   inline FP32 getTotalDist(int idx) {
