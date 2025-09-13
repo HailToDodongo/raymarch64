@@ -130,7 +130,6 @@ namespace
         };
 
         advanceDir();
-        UCode::stop();
 
         startNextUcode();
         MEMORY_BARRIER();
@@ -189,6 +188,7 @@ namespace
         } while(buffLocal != buffLocalEnd);
 
         buff += stride;
+        UCode::stop();
     }
   }
 }

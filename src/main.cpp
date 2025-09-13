@@ -22,10 +22,9 @@ namespace {
 [[noreturn]]
 int main()
 {
-  debug_init_isviewer();
-  debug_init_usblog();
-
-  dfs_init(DFS_DEFAULT_LOCATION);
+  //debug_init_isviewer();
+  //debug_init_usblog();
+  //dfs_init(DFS_DEFAULT_LOCATION);
 
   joypad_init();
 
