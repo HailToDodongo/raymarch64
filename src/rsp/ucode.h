@@ -8,28 +8,8 @@
 #include "dmemLayout.h"
 #include "../math/mathFP.h"
 
-#define UCODE_DMEM ((volatile UCode::DMEM*)SP_DMEM)
-
 namespace UCode
 {
-  struct DMEM
-  {
-    int32_t pos[3];
-
-    int32_t rayDirA[3];
-    int32_t hitPosA[3];
-    int32_t lastDistA;
-    int32_t totalDistA;
-
-    int32_t rayDirB[3];
-    int32_t hitPosB[3];
-    int32_t lastDistB;
-    int32_t totalDistB;
-
-    int32_t lerpFactorAB;
-    int32_t initDist;
-  } __attribute__((packed));
-
   inline void run(uint32_t pc = 0)
   {
     *SP_PC = pc;
@@ -55,16 +35,17 @@ namespace UCode
 
   inline void reset(const FP32Vec3& rayPos, float lerpFactor, float initialDist)
   {
-    UCODE_DMEM->pos[0] = rayPos.x.val;
-    UCODE_DMEM->pos[1] = rayPos.y.val;
-    UCODE_DMEM->pos[2] = rayPos.z.val;
+    SP_DMEM[DMEM_RAYPOS_X/4] = rayPos.x.val;
+    SP_DMEM[DMEM_RAYPOS_Y/4] = rayPos.y.val;
+    SP_DMEM[DMEM_RAYPOS_Z/4] = rayPos.z.val;
+
 
     uint32_t lerpA = (lerpFactor * 0xFFFF);
     uint32_t lerpB = ((1.0f-lerpFactor) * 0xFFFF);
-    UCODE_DMEM->lerpFactorAB = (lerpB << 16) | (lerpA & 0xFFFF);
+    SP_DMEM[DMEM_LERP_A/4] = (lerpB << 16) | (lerpA & 0xFFFF);
 
     FP32 distFP{initialDist};
-    UCODE_DMEM->initDist = distFP.val;
+    SP_DMEM[DMEM_INIT_DIST/4] = distFP.val;
 
     run(RSP_RAY_CODE_Main);
   }
@@ -93,7 +74,7 @@ namespace UCode
 
   inline FP32 getTotalDist(int idx) {
     FP32 distTotal;
-    distTotal.val = idx == 0 ? UCODE_DMEM->totalDistA : UCODE_DMEM->totalDistB;
+    distTotal.val = idx == 0 ? SP_DMEM[DMEM_TOTAL_DIST_A/4] : SP_DMEM[DMEM_TOTAL_DIST_B/4];
     return distTotal;
   }
 }

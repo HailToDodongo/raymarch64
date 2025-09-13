@@ -157,8 +157,6 @@ function RayMarch()
 
   //u32 iterCount = 128;
   loop {
-
-
     totalDist += res;
 
     @Barrier("lenA") store(res.x, ZERO, DMEM_LAST_DIST_A);
