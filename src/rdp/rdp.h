@@ -23,6 +23,18 @@ namespace
     return (uint32_t)(value * 4);
   }
 
+  constexpr uint64_t floatTo10p5(float value) {
+    return (uint32_t)(value * 32);
+  }
+
+  constexpr uint64_t floatTo5p10(float value) {
+    return (uint32_t)(value * 1024);
+  }
+
+  constexpr uint64_t floatTo1p11(float value) {
+    return (uint32_t)(value * 2048);
+  }
+
   constexpr uint32_t addrToPhysical(void* addr) {
     return std::bit_cast<uint32_t>(addr) & ~0xE0000000;
   }
@@ -254,6 +266,54 @@ namespace RDP
     return setScissor(x0, y0, x0 + sizeX, y0 + sizeY);
   }
 
+  constexpr uint64_t setTile(
+    uint8_t tileIdx,
+    uint32_t format, uint32_t texelSize, uint32_t lineLen,
+    uint8_t maskS, uint8_t maskT
+  )
+  {
+    return bitCmd(0x35)
+      | bitVal(55, 53, format)
+      | bitVal(52, 51, texelSize)
+      | bitVal(49, 41, lineLen)
+
+      | bitVal(26, 24, tileIdx)
+
+      | bitVal(7, 4, maskS)
+      | bitVal(17, 14, maskT)
+    ;
+  }
+
+  constexpr uint64_t setTileSize(
+    int tileIdx, float startU, float startV, float endU, float endV
+  ) {
+    return bitCmd(0x32)
+      | bitVal(floatTo10p2(startU), 55, 44)
+      | bitVal(floatTo10p2(startV), 43, 32)
+      | bitVal(tileIdx, 26, 24)
+      | bitVal(floatTo10p2(endU), 23, 12)
+      | bitVal(floatTo10p2(endV), 11, 0);
+  }
+
+  constexpr uint64_t setTextureImage(void* data, int format, int pixelSize, int width)
+  {
+    return bitCmd(0x3D)
+      | bitVal(format, 61, 53)
+      | bitVal(pixelSize, 52, 51)
+      | bitVal((width-1), 41, 32)
+      | bitVal((uint64_t)data, 23, 0);
+  }
+
+  constexpr uint64_t loadBlock(int tileIdx, uint32_t tmemOffset, int texelCount, uint32_t dxt)
+  {
+    return bitCmd(0x33)
+      | bitVal(floatTo10p2(tmemOffset), 55, 44)
+      | bitVal(tileIdx, 26, 24)
+      | bitVal(floatTo10p2(texelCount), 23, 12)
+      //| bitVal(floatTo1p11(dxt), 11, 0);
+      | bitVal(dxt, 11, 0);
+  }
+
   constexpr uint64_t fillRectFP(int x0, int y0, int x1, int y1) {
     return bitCmd(0x36)
       | bitVal(x1, 55, 44)
@@ -272,6 +332,21 @@ namespace RDP
 
   constexpr uint64_t fillRectSize(float x0, float y0, float sx, float sy) {
     return fillRect(x0, y0, x0 + sx, y0 + sy);
+  }
+
+  constexpr uint64_t texRect0(uint8_t tileIdx, float x0, float y0, float x1, float y1) {
+    return bitCmd(0x24)
+      | bitVal(floatTo10p2(x1), 55, 44)
+      | bitVal(floatTo10p2(y1), 43, 32)
+      | bitVal(tileIdx, 26, 24)
+      | bitVal(floatTo10p2(x0), 23, 12)
+      | bitVal(floatTo10p2(y0), 11, 0);
+  }
+  constexpr uint64_t texRect1(float u, float v, float deltaU, float deltaV) {
+    return bitVal(floatTo10p5(u), 63, 48)
+      | bitVal(floatTo10p5(v), 47, 32)
+      | bitVal(floatTo5p10(deltaU), 31, 16)
+      | bitVal(floatTo5p10(deltaV), 15, 0);
   }
 
   constexpr uint64_t setOtherModes(uint64_t otherMode) {

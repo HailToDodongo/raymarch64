@@ -54,6 +54,7 @@ int main()
   uint32_t frame = 0;
   float time = 0;
   bool lowRes = false;
+  bool redrawMenu = true;
 
   wait_ms(500);
 
@@ -65,7 +66,7 @@ int main()
 
     joypad_poll();
     auto press = joypad_get_buttons_pressed(JOYPAD_PORT_1);
-    if(press.a)lowRes = !lowRes;
+    if(press.a) { lowRes = !lowRes; redrawMenu = true; }
 
     /*while(freeFB == 0) {
       vi_wait_vblank();
@@ -81,7 +82,10 @@ int main()
     enable_interrupts();
 
     Text::printf(16, 222, "%.2fms``", TICKS_TO_US(ticks) * (1.0f / 1000.0f));
-    Text::print(280, 222, lowRes ? "1/4x" : "1x``");
+    if(redrawMenu) {
+      Text::print(280, 222, lowRes ? "1/4x" : "1x``");
+      redrawMenu = false;
+    }
 
     //vi_show(fb);
     //vi_wait_vblank();

@@ -1,0 +1,18 @@
+#define DMEM_RAYPOS_X 0
+#define DMEM_RAYPOS_Y 4
+#define DMEM_RAYPOS_Z 8
+
+#define DMEM_RAYDIR_A 16
+
+#define DMEM_LAST_DIST_A 36
+#define DMEM_TOTAL_DIST_A 40
+
+#define DMEM_RAYDIR_B 48
+
+#define DMEM_LAST_DIST_B 68
+#define DMEM_TOTAL_DIST_B 72
+
+#define DMEM_LERP_A 76
+#define DMEM_LERP_B 78
+
+#define DMEM_INIT_DIST 80
