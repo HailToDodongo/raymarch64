@@ -10,7 +10,7 @@ struct FP32
 
   constexpr FP32() = default;
   constexpr FP32(float f) {
-    val = (int32_t)((float)f * 0x10000);
+    val = (int32_t)(f * 0x10000);
   }
   constexpr FP32(int32_t v) : val(v) {}
 
@@ -23,7 +23,7 @@ struct FP32
   }
 
   FP32& operator=(float f) {
-    val = (int32_t)((float)f * 0x10000);
+    *this = FP32{f};
     return *this;
   }
 

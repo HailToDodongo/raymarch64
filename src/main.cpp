@@ -47,7 +47,8 @@ int main()
     surface_make((char*)0xA0400000, FMT_RGBA16, SCREEN_WIDTH, SCREEN_HEIGHT, FB_STRIDE),
   };
 
-  vi_show(&fbs[1]);
+  auto fb = &fbs[0];
+  vi_show(fb);
 
   RayMarch::init();
   uint32_t frame = 0;
@@ -60,7 +61,6 @@ int main()
   {
     ++frame;
     //state.fb = &fbs[frame % 3];
-    auto fb = &fbs[1];
     Text::setFrameBuffer(*fb);
 
     joypad_poll();

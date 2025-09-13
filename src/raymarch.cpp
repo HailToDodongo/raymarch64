@@ -86,8 +86,6 @@ float mainSDF(const fm_vec3_t& p) {
     return Math::mix(distTorus, distSphere, lerpFactor);
 }
 
-  bool lowRes = false;
-
   constexpr fm_vec3_t RAINBOW_COLORS[4]{
     {31.0f, 10.0f, 10.0f},
     {10.0f, 31.0f, 10.0f},
@@ -153,10 +151,8 @@ void RayMarch::draw(void* fb, float time, bool lowRes)
   lerpFactor = fm_sinf(time*4.0f) * 0.5f + 0.5f;
   //lerpFactor = 0.5f;
 
-  fm_vec3_t camPos = {0,0,0};
-  fm_vec3_t camDir;
+  fm_vec3_t camPos, camDir;
 
-  // orbit camera around 0 based on timer
   camPos.x = fm_sinf(angle) * 2.5f;
   camPos.y = fm_cosf(angle-1.1f) * 2.5f;
   camPos.z = fm_sinf(angle*0.6f) * 3.5f;
@@ -171,16 +167,16 @@ void RayMarch::draw(void* fb, float time, bool lowRes)
   auto rightStep = right * invH;
   assert(rightStep.y == 0);
 
+  // 1239.65ms
+
   buff += (OFFSET_Y * FB_STRIDE) + OFFSET_X*2;
   int stride = FB_STRIDE * (lowRes ? 4 : 1);
 
-  float fyStep = invH;
   float stepX = (-W/2) * invH;
   float stepY = (-H/2) * invH;
+  camDir += right * stepX;
 
-  fm_vec3_t rayDirStepY = (up * fyStep);
   fm_vec3_t rayDirY = up * stepY + camDir;
-  rayDirY += right * stepX;
 
   UCode::sync();
 
@@ -190,9 +186,6 @@ void RayMarch::draw(void* fb, float time, bool lowRes)
 
       fm_vec3_t dir0, dir1;
       FP32Vec3 dirFp0, dirFp1;
-
-      FP32 distTotalA, distTotalB;
-      bool hasResA, hasResB;
 
       auto advanceDir = [&]() {
         dir0 = Math::normalizeUnsafe(rayDirXY);
@@ -217,23 +210,24 @@ void RayMarch::draw(void* fb, float time, bool lowRes)
       startNextUcode();
       MEMORY_BARRIER();
 
-      rayDirY += rayDirStepY;
+      rayDirY += (up * invH);
       uint32_t *buffLocal = (uint32_t*)buff;
-      uint32_t col;
+      const uint32_t *buffLocalEnd = buffLocal + (W/2);
 
       advanceDir();
 
-      for(int x=0; x!=W; x+=2)
+      do
       {
         UCode::sync();
-        distTotalA = UCode::getTotalDist(0);
-        distTotalB = UCode::getTotalDist(1);
+        auto distTotalA = UCode::getTotalDist(0);
+        auto distTotalB = UCode::getTotalDist(1);
 
         // Note: this starts the RSP to prepare the next iterations result.
         // the last iteration does so too never reading it, but getting rid of the if-check saves time
         startNextUcode();
         MEMORY_BARRIER();
 
+        uint32_t col;
         auto applyShade = [&](float distTotal, const fm_vec3_t &oldDir) {
           auto hitPos = camPos + (oldDir * distTotal);
           auto norm = mainSDFNormals(hitPos);
@@ -249,7 +243,9 @@ void RayMarch::draw(void* fb, float time, bool lowRes)
         ++buffLocal;
 
         advanceDir();
-      }
+
+      } while(buffLocal != buffLocalEnd);
+
       buff += stride;
   }
 }
