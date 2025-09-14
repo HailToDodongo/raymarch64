@@ -9,35 +9,10 @@
 #pragma GCC optimize ("-ffast-math")
 
 namespace SDF {
-  float cube(const fm_vec3_t& p) {
-    constexpr float s = 0.5f/4.0f;
-    fm_vec3_t d{
-      fabsf(p.x + 0.25f) - s,
-      fabsf(p.y + 0.125f) - s,
-      fabsf(p.z + 0.25f) - s,
-    };
-
-    d = {
-      std::max(d.x, 0.0f),
-      std::max(d.y, 0.0f),
-      std::max(d.z, 0.0f)
-    };
-
-    float distSq = Math::dot(d, d);
-    return std::sqrt(distSq);
-  }
 
   fm_vec3_t mainNormals(const fm_vec3_t& p_)
   {
-      /*assert(p.x > -0.5f);
-      assert(p.y > -0.5f);
-      assert(p.z > -0.5f);
-
-      assert(p.x < 0.5f);
-      assert(p.y < 0.5f);
-      assert(p.z < 0.5f);*/
-
-      auto p = Math::fastClamp(p_);
+     auto p = Math::fastClamp(p_);
       constexpr float r1 = 0.25f;
       float distXZ = Math::sqrtfApprox(p.x*p.x + p.z*p.z);
       float qx = 1.0f - (r1 / distXZ);

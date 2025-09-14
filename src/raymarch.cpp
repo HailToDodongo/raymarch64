@@ -39,7 +39,6 @@ namespace
     uint32_t bgColor;
   };
 
-
   constexpr uint32_t createBgColor(color_t c) {
     return (((int)c.r >> 3) << 11) | (((int)c.g >> 3) << 6) | (((int)c.b >> 3) << 1) | (c.a >> 7);
   }
@@ -161,7 +160,10 @@ namespace
     camPos.z = fm_sinf(angle*0.6f) * 3.15f;
     camDir = Math::normalize(fm_vec3_t{0,0,0} - camPos);
 
+    // initial distance is the same for all rays, so do it once here and send it to the ucode
     float initialDist = CONF.fnSDF(Math::fastClamp(camPos));
+    // if we start inside an object (negative dist), move out a bit to avoid artifacts
+    initialDist = fmaxf(initialDist, 0.11f);
     UCode::reset({FP32{camPos.x}, FP32{camPos.y}, FP32{camPos.z}}, lerpFactor, initialDist);
 
     constexpr fm_vec3_t worldUp{0,1,0};

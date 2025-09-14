@@ -55,7 +55,7 @@ int main()
   int redrawMenu = 4;
 
   constexpr int MAX_SDF_IDX = 3;
-  int sdfIdx = MAX_SDF_IDX;
+  int sdfIdx = 0;
 
   wait_ms(500);
   vi_show(&fbs[0]);
@@ -66,8 +66,8 @@ int main()
     auto press = joypad_get_buttons_pressed(JOYPAD_PORT_1);
     if(press.a) { lowRes = !lowRes; redrawMenu = 4; }
 
-    if(press.l) { --sdfIdx; redrawMenu = 4; }
-    if(press.r) { ++sdfIdx; redrawMenu = 4; }
+    if(press.l) { --sdfIdx; redrawMenu = 4; time = 0; }
+    if(press.r) { ++sdfIdx; redrawMenu = 4; time = 0; }
 
     if(sdfIdx < 0)sdfIdx = MAX_SDF_IDX;
     if(sdfIdx > MAX_SDF_IDX)sdfIdx = 0;
