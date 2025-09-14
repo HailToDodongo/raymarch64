@@ -35,54 +35,57 @@ int main()
   vi_set_divot(false);
   vi_set_gamma(VI_GAMMA_DISABLE);
 
-  /*disable_interrupts();
+  /*
+  disable_interrupts();
     register_VI_handler(on_vi_frame_ready);
     set_VI_interrupt(1, VI_V_CURRENT_VBLANK);
-  enable_interrupts();*/
+  enable_interrupts();
+  */
 
   surface_t fbs[3] = {
     surface_make((char*)0xA0280000, FMT_RGBA16, SCREEN_WIDTH, SCREEN_HEIGHT, FB_STRIDE),
+    surface_make((char*)0xA0300000, FMT_RGBA16, SCREEN_WIDTH, SCREEN_HEIGHT, FB_STRIDE),
     surface_make((char*)0xA0380000, FMT_RGBA16, SCREEN_WIDTH, SCREEN_HEIGHT, FB_STRIDE),
-    surface_make((char*)0xA0400000, FMT_RGBA16, SCREEN_WIDTH, SCREEN_HEIGHT, FB_STRIDE),
   };
-
-  auto fb = &fbs[0];
-  vi_show(fb);
 
   RayMarch::init();
   uint32_t frame = 0;
   float time = 0;
   bool lowRes = false;
-  bool redrawMenu = true;
+  int redrawMenu = 4;
 
   constexpr int MAX_SDF_IDX = 3;
   int sdfIdx = MAX_SDF_IDX;
 
   wait_ms(500);
+  vi_show(&fbs[0]);
 
   for(;;) 
   {
-    ++frame;
-    //state.fb = &fbs[frame % 3];
-    Text::setFrameBuffer(*fb);
-
     joypad_poll();
     auto press = joypad_get_buttons_pressed(JOYPAD_PORT_1);
-    if(press.a) { lowRes = !lowRes; redrawMenu = true; }
+    if(press.a) { lowRes = !lowRes; redrawMenu = 4; }
 
-    if(press.l) { --sdfIdx; redrawMenu = true; }
-    if(press.r) { ++sdfIdx; redrawMenu = true; }
+    if(press.l) { --sdfIdx; redrawMenu = 4; }
+    if(press.r) { ++sdfIdx; redrawMenu = 4; }
 
     if(sdfIdx < 0)sdfIdx = MAX_SDF_IDX;
     if(sdfIdx > MAX_SDF_IDX)sdfIdx = 0;
-    /*while(freeFB == 0) {
-      vi_wait_vblank();
-    }*/
 
-    if(redrawMenu) {
+    if(lowRes) {
+      /*while(freeFB == 0) {
+        vi_wait_vblank();
+      }*/
+      frame = (frame + 1) % 3;
+    }
+
+    auto fb = &fbs[frame];
+    Text::setFrameBuffer(*fb);
+
+    if(redrawMenu != 0) {
       Text::printf(130, 222, "[L/R] SDF:%d", sdfIdx);
       Text::print(240, 222, lowRes ? "[A] 1/4x" : "[A] 1x``");
-      redrawMenu = false;
+      --redrawMenu;
     }
 
     time += 0.025f;
@@ -96,7 +99,7 @@ int main()
 
     Text::printf(16, 222, "%.2fms``", TICKS_TO_US(ticks) * (1.0f / 1000.0f));
 
-    //vi_show(fb);
+    vi_show(fb);
     //vi_wait_vblank();
   }
 }

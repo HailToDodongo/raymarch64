@@ -97,9 +97,9 @@ namespace
     s = hitPos.y*2;
 
     fm_vec3_t col{
-      fm_sinf(s + 0.0f) * base + base,
-      fm_sinf(s + 2.0f) * base + base,
-      fm_sinf(s + 4.0f) * base + base,
+      Math::sinApprox(s + 0.0f) * base + base,
+      Math::sinApprox(s + 2.0f) * base + base,
+      Math::sinApprox(s + 4.0f) * base + base,
     };
 
     //col *= (distNormInv * light);
@@ -128,9 +128,9 @@ namespace
     constexpr float base = 15.5f;
 
     fm_vec3_t col{
-      fm_sinf(s + 0.0f) * base + base,
-      fm_sinf(s + 2.0f) * base + base,
-      fm_sinf(s + 4.0f) * base + base,
+      Math::sinApprox(s + 0.0f) * base + base,
+      Math::sinApprox(s + 2.0f) * base + base,
+      Math::sinApprox(s + 4.0f) * base + base,
     };
 
     col = Math::mix(

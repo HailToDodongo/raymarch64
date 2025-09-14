@@ -112,68 +112,98 @@
 OVERLAY_CODE_START:
 
 Main:
-  vxor $v00, $v00, $v00 # inline-ASM                 ## L:49   |      ^ | asm("vxor $v00, $v00, $v00");
-  ori $t0, $zero, 0x8000                             ## L:50   |      1 | u16 tmp = 0x8000;
-  mtc2 $t0, $v31.e0                                  ## L:51   |      2 | VSHIFT8.x = tmp; tmp >>= 1;
-  srl $t0, $t0, 1                                    ## L:51   |      3 | VSHIFT8.x = tmp; tmp >>= 1;
-  mtc2 $t0, $v31.e1                                  ## L:52   |     *5 | VSHIFT8.y = tmp; tmp >>= 1;
-  srl $t0, $t0, 1                                    ## L:52   |      6 | VSHIFT8.y = tmp; tmp >>= 1;
-  mtc2 $t0, $v31.e2                                  ## L:53   |     *8 | VSHIFT8.z = tmp; tmp >>= 1;
-  srl $t0, $t0, 1                                    ## L:53   |      9 | VSHIFT8.z = tmp; tmp >>= 1;
-  mtc2 $t0, $v31.e3                                  ## L:54   |    *11 | VSHIFT8.w = tmp; tmp >>= 1;
-  srl $t0, $t0, 1                                    ## L:54   |     12 | VSHIFT8.w = tmp; tmp >>= 1;
-  mtc2 $t0, $v31.e4                                  ## L:55   |    *14 | VSHIFT8.X = tmp; tmp >>= 1;
-  srl $t0, $t0, 1                                    ## L:55   |     15 | VSHIFT8.X = tmp; tmp >>= 1;
-  mtc2 $t0, $v31.e5                                  ## L:56   |    *17 | VSHIFT8.Y = tmp; tmp >>= 1;
-  srl $t0, $t0, 1                                    ## L:56   |     18 | VSHIFT8.Y = tmp; tmp >>= 1;
-  mtc2 $t0, $v31.e6                                  ## L:57   |    *20 | VSHIFT8.Z = tmp; tmp >>= 1;
-  srl $t0, $t0, 1                                    ## L:57   |     21 | VSHIFT8.Z = tmp; tmp >>= 1;
-  mtc2 $t0, $v31.e7                                  ## L:58   |    *23 | VSHIFT8.W = tmp;
-  vmudl $v30, $v31, $v31.e7                          ## L:60   |  ***27 | VSHIFT = VSHIFT8 >>> 8;
+  vxor $v00, $v00, $v00 # inline-ASM                 ## L:53   |      ^ | asm("vxor $v00, $v00, $v00");
+  vxor $v01, $v01, $v01 # inline-ASM                 ## L:54   |      ^ | asm("vxor $v01, $v01, $v01");
+  vxor $v02, $v02, $v02 # inline-ASM                 ## L:55   |      ^ | asm("vxor $v02, $v02, $v02");
+  vxor $v03, $v03, $v03 # inline-ASM                 ## L:56   |      ^ | asm("vxor $v03, $v03, $v03");
+  vxor $v04, $v04, $v04 # inline-ASM                 ## L:57   |      ^ | asm("vxor $v04, $v04, $v04");
+  vxor $v05, $v05, $v05 # inline-ASM                 ## L:58   |      ^ | asm("vxor $v05, $v05, $v05");
+  vxor $v06, $v06, $v06 # inline-ASM                 ## L:59   |      ^ | asm("vxor $v06, $v06, $v06");
+  vxor $v07, $v07, $v07 # inline-ASM                 ## L:60   |      ^ | asm("vxor $v07, $v07, $v07");
+  vxor $v08, $v08, $v08 # inline-ASM                 ## L:61   |      ^ | asm("vxor $v08, $v08, $v08");
+  vxor $v09, $v09, $v09 # inline-ASM                 ## L:62   |      ^ | asm("vxor $v09, $v09, $v09");
+  vxor $v10, $v10, $v10 # inline-ASM                 ## L:63   |      ^ | asm("vxor $v10, $v10, $v10");
+  vxor $v11, $v11, $v11 # inline-ASM                 ## L:64   |      ^ | asm("vxor $v11, $v11, $v11");
+  vxor $v12, $v12, $v12 # inline-ASM                 ## L:65   |      ^ | asm("vxor $v12, $v12, $v12");
+  vxor $v13, $v13, $v13 # inline-ASM                 ## L:66   |      ^ | asm("vxor $v13, $v13, $v13");
+  vxor $v14, $v14, $v14 # inline-ASM                 ## L:67   |      ^ | asm("vxor $v14, $v14, $v14");
+  vxor $v15, $v15, $v15 # inline-ASM                 ## L:68   |      ^ | asm("vxor $v15, $v15, $v15");
+  vxor $v16, $v16, $v16 # inline-ASM                 ## L:69   |      ^ | asm("vxor $v16, $v16, $v16");
+  vxor $v17, $v17, $v17 # inline-ASM                 ## L:70   |      ^ | asm("vxor $v17, $v17, $v17");
+  vxor $v18, $v18, $v18 # inline-ASM                 ## L:71   |      ^ | asm("vxor $v18, $v18, $v18");
+  vxor $v19, $v19, $v19 # inline-ASM                 ## L:72   |      ^ | asm("vxor $v19, $v19, $v19");
+  vxor $v20, $v20, $v20 # inline-ASM                 ## L:73   |      ^ | asm("vxor $v20, $v20, $v20");
+  vxor $v21, $v21, $v21 # inline-ASM                 ## L:74   |      ^ | asm("vxor $v21, $v21, $v21");
+  vxor $v22, $v22, $v22 # inline-ASM                 ## L:75   |      ^ | asm("vxor $v22, $v22, $v22");
+  vxor $v23, $v23, $v23 # inline-ASM                 ## L:76   |      ^ | asm("vxor $v23, $v23, $v23");
+  vxor $v24, $v24, $v24 # inline-ASM                 ## L:77   |      ^ | asm("vxor $v24, $v24, $v24");
+  vxor $v25, $v25, $v25 # inline-ASM                 ## L:78   |      ^ | asm("vxor $v25, $v25, $v25");
+  vxor $v26, $v26, $v26 # inline-ASM                 ## L:79   |      ^ | asm("vxor $v26, $v26, $v26");
+  vxor $v27, $v27, $v27 # inline-ASM                 ## L:80   |      ^ | asm("vxor $v27, $v27, $v27");
+  vxor $v28, $v28, $v28 # inline-ASM                 ## L:81   |      ^ | asm("vxor $v28, $v28, $v28");
+  vxor $v29, $v29, $v29 # inline-ASM                 ## L:82   |      ^ | asm("vxor $v29, $v29, $v29");
+
+  ori $t0, $zero, 0x8000                             ## L:86   |      1 | u16 tmp = 0x8000;
+  mtc2 $t0, $v31.e0                                  ## L:87   |      2 | VSHIFT8.x = tmp; tmp >>= 1;
+  srl $t0, $t0, 1                                    ## L:87   |      3 | VSHIFT8.x = tmp; tmp >>= 1;
+  mtc2 $t0, $v31.e1                                  ## L:88   |     *5 | VSHIFT8.y = tmp; tmp >>= 1;
+  srl $t0, $t0, 1                                    ## L:88   |      6 | VSHIFT8.y = tmp; tmp >>= 1;
+  mtc2 $t0, $v31.e2                                  ## L:89   |     *8 | VSHIFT8.z = tmp; tmp >>= 1;
+  srl $t0, $t0, 1                                    ## L:89   |      9 | VSHIFT8.z = tmp; tmp >>= 1;
+  mtc2 $t0, $v31.e3                                  ## L:90   |    *11 | VSHIFT8.w = tmp; tmp >>= 1;
+  srl $t0, $t0, 1                                    ## L:90   |     12 | VSHIFT8.w = tmp; tmp >>= 1;
+  mtc2 $t0, $v31.e4                                  ## L:91   |    *14 | VSHIFT8.X = tmp; tmp >>= 1;
+  srl $t0, $t0, 1                                    ## L:91   |     15 | VSHIFT8.X = tmp; tmp >>= 1;
+  mtc2 $t0, $v31.e5                                  ## L:92   |    *17 | VSHIFT8.Y = tmp; tmp >>= 1;
+  srl $t0, $t0, 1                                    ## L:92   |     18 | VSHIFT8.Y = tmp; tmp >>= 1;
+  mtc2 $t0, $v31.e6                                  ## L:93   |    *20 | VSHIFT8.Z = tmp; tmp >>= 1;
+  srl $t0, $t0, 1                                    ## L:93   |     21 | VSHIFT8.Z = tmp; tmp >>= 1;
+  mtc2 $t0, $v31.e7                                  ## L:94   |    *23 | VSHIFT8.W = tmp;
+  vmudl $v30, $v31, $v31.e7                          ## L:96   |  ***27 | VSHIFT = VSHIFT8 >>> 8;
   SHIFT_END:
-  addiu $at, $zero, 16384                            ## L:67   |      ^ | SPHERE_RAD.x = 0.25;
-  mtc2 $at, $v07.e0                                  ## L:67   |     28 | SPHERE_RAD.x = 0.25;
-  addiu $at, $zero, 4915                             ## L:68   |     29 | SPHERE_RAD.y = 0.075;
-  lsv $v11, 0, 2, $zero                              ## L:81   |     30 | rayPosOrg.x = load(ZERO, 0).x;
-  mtc2 $at, $v07.e1                                  ## L:68   |     31 | SPHERE_RAD.y = 0.075;
-  ori $at, $zero, 0x8000                             ## L:69   |     32 | SPHERE_RAD.z = 0.5;
-  lsv $v11, 2, 6, $zero                              ## L:82   |     33 | rayPosOrg.y = load(ZERO, 4).x;
-  mtc2 $at, $v07.e2                                  ## L:69   |     34 | SPHERE_RAD.z = 0.5;
-  ori $at, $zero, 0x93CA                             ## L:70   |     35 | SPHERE_RAD.w = 0.5773;
-  lsv $v11, 4, 10, $zero                             ## L:83   |     36 | rayPosOrg.z = load(ZERO, 8).x;
-  mtc2 $at, $v07.e3                                  ## L:70   |     37 | SPHERE_RAD.w = 0.5773;
-  addiu $at, $zero, 2                                ## L:72   |     38 | SPHERE_RAD.X = 2.5;
-  lsv $v10, 0, 0, $zero                              ## L:81   |     39 | rayPosOrg.x = load(ZERO, 0).x;
-  mtc2 $at, $v06.e4                                  ## L:72   |     40 | SPHERE_RAD.X = 2.5;
-  vmov $v11.e6, $v11.e2                              ## L:87   |      ^ | rayPosOrg.Z = rayPosOrg.z;
-  ori $at, $zero, 0x8000                             ## L:72   |     41 | SPHERE_RAD.X = 2.5;
-  mtc2 $zero, $v06.e1                                ## L:68   |    *43 | SPHERE_RAD.y = 0.075;
-  mtc2 $at, $v07.e4                                  ## L:72   |     44 | SPHERE_RAD.X = 2.5;
-  lsv $v10, 2, 4, $zero                              ## L:82   |     45 | rayPosOrg.y = load(ZERO, 4).x;
-  addiu $at, $zero, 13107                            ## L:73   |     46 | SPHERE_RAD.Y = 0.2;
-  lsv $v10, 4, 8, $zero                              ## L:83   |     47 | rayPosOrg.z = load(ZERO, 8).x;
-  vmov $v11.e5, $v11.e1                              ## L:86   |      ^ | rayPosOrg.Y = rayPosOrg.y;
-  mtc2 $at, $v07.e5                                  ## L:73   |     48 | SPHERE_RAD.Y = 0.2;
-  ori $at, $zero, 0xFFFF                             ## L:75   |     49 | SPHERE_RAD.Z = -0.25;
-  mtc2 $at, $v06.e6                                  ## L:75   |    *51 | SPHERE_RAD.Z = -0.25;
-  mtc2 $zero, $v06.e5                                ## L:73   |     52 | SPHERE_RAD.Y = 0.2;
-  addiu $a1, $zero, 1048                             ## L:92   |     53 | s32<$a1> STOP_DIST   = 0.016 * 0xFFFF;
-  ori $at, $zero, 0xC000                             ## L:75   |     54 | SPHERE_RAD.Z = -0.25;
-  vmov $v10.e5, $v10.e1                              ## L:86   |      ^ | rayPosOrg.Y = rayPosOrg.y;
-  mtc2 $zero, $v06.e0                                ## L:67   |     55 | SPHERE_RAD.x = 0.25;
-  mtc2 $at, $v07.e6                                  ## L:75   |     56 | SPHERE_RAD.Z = -0.25;
-  ori $at, $zero, 0xFFFF                             ## L:76   |     57 | SPHERE_RAD.W = -0.075;
-  mtc2 $at, $v06.e7                                  ## L:76   |    *59 | SPHERE_RAD.W = -0.075;
-  mtc2 $zero, $v06.e3                                ## L:70   |     60 | SPHERE_RAD.w = 0.5773;
-  vmov $v10.e4, $v10.e0                              ## L:85   |      ^ | rayPosOrg.X = rayPosOrg.x;
-  lui $a0, 0x0B                                      ## L:91   |     61 | s32<$a0> RENDER_DIST = 11.0 << 16;
-  vmov $v11.e4, $v11.e0                              ## L:85   |      ^ | rayPosOrg.X = rayPosOrg.x;
-  vxor $v04, $v00, $v30.e7                           ## L:64   |     62 | vec32<$v04> ONE = 1;
-  ori $at, $zero, 0xECCD                             ## L:76   |      ^ | SPHERE_RAD.W = -0.075;
-  mtc2 $at, $v07.e7                                  ## L:76   |     63 | SPHERE_RAD.W = -0.075;
-  vxor $v05, $v00, $v00                              ## L:64   |      ^ | vec32<$v04> ONE = 1;
-  vmov $v10.e6, $v10.e2                              ## L:87   |     64 | rayPosOrg.Z = rayPosOrg.z;
-  mtc2 $zero, $v06.e2                                ## L:69   |      ^ | SPHERE_RAD.z = 0.5;
+  addiu $at, $zero, 16384                            ## L:103  |      ^ | SPHERE_RAD.x = 0.25;
+  mtc2 $at, $v07.e0                                  ## L:103  |     28 | SPHERE_RAD.x = 0.25;
+  mtc2 $zero, $v06.e3                                ## L:106  |     29 | SPHERE_RAD.w = 0.5773;
+  vxor $v05, $v00, $v00                              ## L:100  |      ^ | vec32<$v04> ONE = 1;
+  addiu $at, $zero, 4915                             ## L:104  |     30 | SPHERE_RAD.y = 0.075;
+  lsv $v11, 2, 6, $zero                              ## L:118  |     31 | rayPosOrg.y = load(ZERO, 4).x;
+  mtc2 $at, $v07.e1                                  ## L:104  |     32 | SPHERE_RAD.y = 0.075;
+  ori $at, $zero, 0x8000                             ## L:105  |     33 | SPHERE_RAD.z = 0.5;
+  lsv $v10, 2, 4, $zero                              ## L:118  |     34 | rayPosOrg.y = load(ZERO, 4).x;
+  mtc2 $at, $v07.e2                                  ## L:105  |     35 | SPHERE_RAD.z = 0.5;
+  ori $at, $zero, 0x93CA                             ## L:106  |     36 | SPHERE_RAD.w = 0.5773;
+  lsv $v10, 0, 0, $zero                              ## L:117  |     37 | rayPosOrg.x = load(ZERO, 0).x;
+  mtc2 $at, $v07.e3                                  ## L:106  |     38 | SPHERE_RAD.w = 0.5773;
+  addiu $at, $zero, 2                                ## L:108  |     39 | SPHERE_RAD.X = 2.5;
+  lsv $v10, 4, 8, $zero                              ## L:119  |     40 | rayPosOrg.z = load(ZERO, 8).x;
+  mtc2 $at, $v06.e4                                  ## L:108  |     41 | SPHERE_RAD.X = 2.5;
+  ori $at, $zero, 0x8000                             ## L:108  |     42 | SPHERE_RAD.X = 2.5;
+  lsv $v11, 0, 2, $zero                              ## L:117  |     43 | rayPosOrg.x = load(ZERO, 0).x;
+  mtc2 $at, $v07.e4                                  ## L:108  |     44 | SPHERE_RAD.X = 2.5;
+  addiu $at, $zero, 13107                            ## L:109  |     45 | SPHERE_RAD.Y = 0.2;
+  vmov $v10.e5, $v10.e1                              ## L:122  |      ^ | rayPosOrg.Y = rayPosOrg.y;
+  lsv $v11, 4, 10, $zero                             ## L:119  |     46 | rayPosOrg.z = load(ZERO, 8).x;
+  mtc2 $at, $v07.e5                                  ## L:109  |     47 | SPHERE_RAD.Y = 0.2;
+  ori $at, $zero, 0xFFFF                             ## L:111  |     48 | SPHERE_RAD.Z = -0.25;
+  addiu $a1, $zero, 1048                             ## L:128  |     49 | s32<$a1> STOP_DIST   = 0.016 * 0xFFFF;
+  vmov $v10.e4, $v10.e0                              ## L:121  |      ^ | rayPosOrg.X = rayPosOrg.x;
+  vxor $v04, $v00, $v30.e7                           ## L:100  |     50 | vec32<$v04> ONE = 1;
+  mtc2 $zero, $v06.e1                                ## L:104  |      ^ | SPHERE_RAD.y = 0.075;
+  mtc2 $at, $v06.e6                                  ## L:111  |     51 | SPHERE_RAD.Z = -0.25;
+  ori $at, $zero, 0xC000                             ## L:111  |     52 | SPHERE_RAD.Z = -0.25;
+  mtc2 $at, $v07.e6                                  ## L:111  |    *54 | SPHERE_RAD.Z = -0.25;
+  vmov $v11.e5, $v11.e1                              ## L:122  |      ^ | rayPosOrg.Y = rayPosOrg.y;
+  mtc2 $zero, $v06.e2                                ## L:105  |     55 | SPHERE_RAD.z = 0.5;
+  ori $at, $zero, 0xFFFF                             ## L:112  |     56 | SPHERE_RAD.W = -0.075;
+  mtc2 $at, $v06.e7                                  ## L:112  |    *58 | SPHERE_RAD.W = -0.075;
+  mtc2 $zero, $v06.e0                                ## L:103  |     59 | SPHERE_RAD.x = 0.25;
+  vmov $v11.e4, $v11.e0                              ## L:121  |      ^ | rayPosOrg.X = rayPosOrg.x;
+  ori $at, $zero, 0xECCD                             ## L:112  |     60 | SPHERE_RAD.W = -0.075;
+  lui $a0, 0x0B                                      ## L:127  |     61 | s32<$a0> RENDER_DIST = 11.0 << 16;
+  mtc2 $at, $v07.e7                                  ## L:112  |     62 | SPHERE_RAD.W = -0.075;
+  vmov $v10.e6, $v10.e2                              ## L:123  |      ^ | rayPosOrg.Z = rayPosOrg.z;
+  vmov $v11.e6, $v11.e2                              ## L:123  |     63 | rayPosOrg.Z = rayPosOrg.z;
+  mtc2 $zero, $v06.e5                                ## L:109  |      ^ | SPHERE_RAD.Y = 0.2;
 RayMarch_Main:
   vxor $v17, $v00, $v00                              ## L:154  |      ^ | vec32 totalDist = 0;
   ldv $v12, 0, 16, $zero                             ## L:161  |      ^ | rayDir:sint.xyzw = load(ZERO, 16).xyzw;
@@ -488,74 +518,74 @@ RayMarch_Cylinder:
   sw $t1, 72($zero)                                  ## L:823  |    *63 | store(totalDistB, ZERO, 72);
   break # inline-ASM                                 ## L:826  |      0 | asm("break");
 RayMarch_Octa:
-  vxor $v01, $v00, $v00.e0                           ## L:868  |      ^ | posSq:sint = 0;
-  ldv $v12, 0, 16, $zero                             ## L:882  |      ^ | rayDir:sint.xyzw = load(ZERO, 16).xyzw;
-  or $t0, $zero, $zero                               ## L:862  |      2 | s32 totalDistA = 0;
-  ldv $v12, 8, 48, $zero                             ## L:883  |      3 | rayDir:sint.XYZW = load(ZERO, 48).xyzw;
-  vxor $v14, $v00, $v00.e0                           ## L:871  |      ^ | res:sint = 0;
-  lsv $v15, 0, 82, $zero                             ## L:872  |      4 | res:sfract.x = load(ZERO, 80).y;
-  addiu $t5, $zero, 1                                ## L:858  |      5 | u8<$t5> isDoneAFlag = 1;
-  vxor $v17, $v00, $v00                              ## L:875  |      ^ | vec32 totalDist = 0;
-  vxor $v16, $v00, $v00.e0                           ## L:875  |      6 | vec32 totalDist = 0;
-  lsv $v15, 8, 82, $zero                             ## L:873  |      ^ | res:sfract.X = load(ZERO, 80).y;
-  or $t1, $zero, $zero                               ## L:863  |      7 | s32 totalDistB = 0;
-  vmudl $v13, $v13, $v30.e6                          ## L:884  |      ^ | rayDir >>= 15;
-  vmadm $v12, $v12, $v30.e6                          ## L:884  |      8 | rayDir >>= 15;
-  addiu $t6, $zero, 1                                ## L:859  |      ^ | u8<$t6> isDoneBFlag = 1;
-  vmadn $v13, $v00, $v00                             ## L:884  |      9 | rayDir >>= 15;
+  ldv $v12, 0, 16, $zero                             ## L:924  |      ^ | rayDir:sint.xyzw = load(ZERO, 16).xyzw;
+  or $t0, $zero, $zero                               ## L:904  |      2 | s32 totalDistA = 0;
+  vxor $v17, $v00, $v00                              ## L:917  |      ^ | vec32 totalDist = 0;
+  ldv $v12, 8, 48, $zero                             ## L:925  |      3 | rayDir:sint.XYZW = load(ZERO, 48).xyzw;
+  vxor $v01, $v00, $v00.e0                           ## L:910  |      ^ | posSq:sint = 0;
+  or $t1, $zero, $zero                               ## L:905  |      4 | s32 totalDistB = 0;
+  vxor $v14, $v00, $v00.e0                           ## L:913  |      ^ | res:sint = 0;
+  vxor $v16, $v00, $v00.e0                           ## L:917  |      5 | vec32 totalDist = 0;
+  lsv $v15, 0, 82, $zero                             ## L:914  |      ^ | res:sfract.x = load(ZERO, 80).y;
+  vmudl $v13, $v13, $v30.e6                          ## L:926  |      6 | rayDir >>= 15;
+  lsv $v15, 8, 82, $zero                             ## L:915  |      ^ | res:sfract.X = load(ZERO, 80).y;
+  addiu $t5, $zero, 1                                ## L:900  |      7 | u8<$t5> isDoneAFlag = 1;
+  vmadm $v12, $v12, $v30.e6                          ## L:926  |      ^ | rayDir >>= 15;
+  vmadn $v13, $v00, $v00                             ## L:926  |      8 | rayDir >>= 15;
+  addiu $t6, $zero, 1                                ## L:901  |      ^ | u8<$t6> isDoneBFlag = 1;
   LABEL_RayMarch_Octa_0013:
-  ssv $v14, 0, 36, $zero                             ## L:890  |      ^ | @Barrier("lenA") store(res.x, ZERO, 36); ## Barrier: 0x1
-  ssv $v14, 8, 68, $zero                             ## L:891  |     10 | @Barrier("lenB") store(res.X, ZERO, 68); ## Barrier: 0x2
-  vaddc $v17, $v17, $v15.v                           ## L:888  |      ^ | totalDist += res;
-  vadd $v16, $v16, $v14.v                            ## L:888  |     11 | totalDist += res;
-  ssv $v15, 8, 70, $zero                             ## L:891  |      ^ | @Barrier("lenB") store(res.X, ZERO, 68); ## Barrier: 0x2
-  vmudl $v29, $v05, $v11.v                           ## L:908  |     12 | nextPos = ONE * rayPosOrg;
-  ssv $v15, 0, 38, $zero                             ## L:890  |      ^ | @Barrier("lenA") store(res.x, ZERO, 36); ## Barrier: 0x1
-  lw $t3, 68($zero)                                  ## L:894  |     13 | @Barrier("lenB") distB = load(ZERO, 68); ## Barrier: 0x2
-  lw $t2, 36($zero)                                  ## L:893  |     14 | @Barrier("lenA") distA = load(ZERO, 36); ## Barrier: 0x1
-  vmadm $v29, $v04, $v11.v                           ## L:908  |      ^ | nextPos = ONE * rayPosOrg;
-  lsv $v09, 2, 78, $zero                             ## L:920  |     15 | LERP_FACTOR:ufract.y = load(ZERO, 78).x;
-  vmadn $v19, $v05, $v10.v                           ## L:908  |      ^ | nextPos = ONE * rayPosOrg;
-  vmadh $v18, $v04, $v10.v                           ## L:908  |     16 | nextPos = ONE * rayPosOrg;
-  slt $t8, $t3, $a1                                  ## L:900  |      ^ | u8 isDoneB = distB < STOP_DIST;
-  addu $t0, $t0, $t2                                 ## L:896  |     17 | totalDistA += distA;
-  slt $t7, $t2, $a1                                  ## L:899  |     18 | u8 isDoneA = distA < STOP_DIST;
-  slt $t4, $a0, $t0                                  ## L:902  |     19 | tmp = totalDistA > RENDER_DIST;
-  vmadl $v29, $v13, $v17.h0                          ## L:909  |      ^ | nextPos = rayDir +* totalDist.xxxxXXXX;
-  vmadm $v29, $v12, $v17.h0                          ## L:909  |     20 | nextPos = rayDir +* totalDist.xxxxXXXX;
-  or $t7, $t7, $t4                                   ## L:903  |      ^ | isDoneA |= tmp;
-  vmadn $v19, $v13, $v16.h0                          ## L:909  |     21 | nextPos = rayDir +* totalDist.xxxxXXXX;
-  addu $t1, $t1, $t3                                 ## L:897  |      ^ | totalDistB += distB;
-  slt $t4, $a0, $t1                                  ## L:904  |     22 | tmp = totalDistB > RENDER_DIST;
-  vmadh $v18, $v12, $v16.h0                          ## L:909  |      ^ | nextPos = rayDir +* totalDist.xxxxXXXX;
-  beq $t7, $t5, Octa_markDoneA                       ## L:923  |     23 | if(isDoneA == isDoneAFlag)goto Octa_markDoneA;
-  or $t8, $t8, $t4                                   ## L:905  |    *25 | isDoneB |= tmp;
+  ssv $v14, 8, 68, $zero                             ## L:933  |      9 | @Barrier("lenB") store(res.X, ZERO, 68); ## Barrier: 0x2
+  ssv $v14, 0, 36, $zero                             ## L:932  |     10 | @Barrier("lenA") store(res.x, ZERO, 36); ## Barrier: 0x1
+  vaddc $v17, $v17, $v15.v                           ## L:930  |      ^ | totalDist += res;
+  ssv $v15, 0, 38, $zero                             ## L:932  |     11 | @Barrier("lenA") store(res.x, ZERO, 36); ## Barrier: 0x1
+  vadd $v16, $v16, $v14.v                            ## L:930  |      ^ | totalDist += res;
+  vmudl $v29, $v05, $v11.v                           ## L:950  |     12 | nextPos = ONE * rayPosOrg;
+  lw $t2, 36($zero)                                  ## L:935  |      ^ | @Barrier("lenA") distA = load(ZERO, 36); ## Barrier: 0x1
+  vmadm $v29, $v04, $v11.v                           ## L:950  |     13 | nextPos = ONE * rayPosOrg;
+  ssv $v15, 8, 70, $zero                             ## L:933  |      ^ | @Barrier("lenB") store(res.X, ZERO, 68); ## Barrier: 0x2
+  lw $t3, 68($zero)                                  ## L:936  |     14 | @Barrier("lenB") distB = load(ZERO, 68); ## Barrier: 0x2
+  addu $t0, $t0, $t2                                 ## L:938  |     15 | totalDistA += distA;
+  vmadn $v19, $v05, $v10.v                           ## L:950  |      ^ | nextPos = ONE * rayPosOrg;
+  slt $t4, $a0, $t0                                  ## L:944  |     16 | tmp = totalDistA > RENDER_DIST;
+  addu $t1, $t1, $t3                                 ## L:939  |     17 | totalDistB += distB;
+  vmadh $v18, $v04, $v10.v                           ## L:950  |      ^ | nextPos = ONE * rayPosOrg;
+  vmadl $v29, $v13, $v17.h0                          ## L:951  |     18 | nextPos = rayDir +* totalDist.xxxxXXXX;
+  slt $t7, $t2, $a1                                  ## L:941  |      ^ | u8 isDoneA = distA < STOP_DIST;
+  lsv $v09, 2, 78, $zero                             ## L:962  |     19 | LERP_FACTOR:ufract.y = load(ZERO, 78).x;
+  or $t7, $t7, $t4                                   ## L:945  |     20 | isDoneA |= tmp;
+  vmadm $v29, $v12, $v17.h0                          ## L:951  |      ^ | nextPos = rayDir +* totalDist.xxxxXXXX;
+  vmadn $v19, $v13, $v16.h0                          ## L:951  |     21 | nextPos = rayDir +* totalDist.xxxxXXXX;
+  slt $t4, $a0, $t1                                  ## L:946  |      ^ | tmp = totalDistB > RENDER_DIST;
+  slt $t8, $t3, $a1                                  ## L:942  |     22 | u8 isDoneB = distB < STOP_DIST;
+  vmadh $v18, $v12, $v16.h0                          ## L:951  |      ^ | nextPos = rayDir +* totalDist.xxxxXXXX;
+  beq $t7, $t5, Octa_markDoneA                       ## L:965  |     23 | if(isDoneA == isDoneAFlag)goto Octa_markDoneA;
+  or $t8, $t8, $t4                                   ## L:947  |    *25 | isDoneB |= tmp;
   __Octa_RET_MARK_DONE_A:
-  vxor $v01, $v00, $v00.e0                           ## L:927  |     26 | posSq:sint = 0;
-  beq $t8, $t6, Octa_markDoneB                       ## L:933  |      ^ | if(isDoneB == isDoneBFlag)goto Octa_markDoneB;
-  vabs $v02, $v19, $v19                              ## L:928  |    *28 | posSq:sfract = abs(nextPos:sfract);
+  vxor $v01, $v00, $v00.e0                           ## L:969  |     26 | posSq:sint = 0;
+  beq $t8, $t6, Octa_markDoneB                       ## L:975  |      ^ | if(isDoneB == isDoneBFlag)goto Octa_markDoneB;
+  vabs $v02, $v19, $v19                              ## L:970  |    *28 | posSq:sfract = abs(nextPos:sfract);
   __Octa_RET_MARK_DONE_B:
-  vsubc $v21, $v02, $v09.e1                          ## L:1047 |  ***32 | tmpA = posSq - LERP_FACTOR.y;
-  vsub $v20, $v01, $v08.e1                           ## L:1047 |     33 | tmpA = posSq - LERP_FACTOR.y;
-  vaddc $v23, $v02, $v02.h2                          ## L:1048 |     34 | tmpB = posSq + posSq:sfract.zzzzZZZZ;
-  vadd $v22, $v01, $v00.h2                           ## L:1048 |     35 | tmpB = posSq + posSq:sfract.zzzzZZZZ;
-  vaddc $v23, $v23, $v21.h1                          ## L:1049 |   **38 | tmpB = tmpB + tmpA.yyyyYYYY;
-  vadd $v22, $v22, $v20.h1                           ## L:1049 |     39 | tmpB = tmpB + tmpA.yyyyYYYY;
-  vmudl $v29, $v23, $v07.e3                          ## L:1051 |   **42 | res = tmpB * SPHERE_RAD.w;
-  vmadm $v29, $v22, $v07.e3                          ## L:1051 |     43 | res = tmpB * SPHERE_RAD.w;
-  vmadn $v15, $v23, $v06.e3                          ## L:1051 |     44 | res = tmpB * SPHERE_RAD.w;
-  j LABEL_RayMarch_Octa_0013                         ## L:1051 |      ^ | res = tmpB * SPHERE_RAD.w;
-  vmadh $v14, $v22, $v06.e3                          ## L:1051 |    *46 | res = tmpB * SPHERE_RAD.w;
+  vsubc $v21, $v02, $v09.e1                          ## L:1089 |  ***32 | tmpA = posSq - LERP_FACTOR.y;
+  vsub $v20, $v01, $v08.e1                           ## L:1089 |     33 | tmpA = posSq - LERP_FACTOR.y;
+  vaddc $v23, $v02, $v02.h2                          ## L:1090 |     34 | tmpB = posSq + posSq:sfract.zzzzZZZZ;
+  vadd $v22, $v01, $v00.h2                           ## L:1090 |     35 | tmpB = posSq + posSq:sfract.zzzzZZZZ;
+  vaddc $v23, $v23, $v21.h1                          ## L:1091 |   **38 | tmpB = tmpB + tmpA.yyyyYYYY;
+  vadd $v22, $v22, $v20.h1                           ## L:1091 |     39 | tmpB = tmpB + tmpA.yyyyYYYY;
+  vmudl $v29, $v23, $v07.e3                          ## L:1093 |   **42 | res = tmpB * SPHERE_RAD.w;
+  vmadm $v29, $v22, $v07.e3                          ## L:1093 |     43 | res = tmpB * SPHERE_RAD.w;
+  vmadn $v15, $v23, $v06.e3                          ## L:1093 |     44 | res = tmpB * SPHERE_RAD.w;
+  j LABEL_RayMarch_Octa_0013                         ## L:1093 |      ^ | res = tmpB * SPHERE_RAD.w;
+  vmadh $v14, $v22, $v06.e3                          ## L:1093 |    *46 | res = tmpB * SPHERE_RAD.w;
   Octa_markDoneA:
-  addiu $t5, $zero, 255                              ## L:1060 |     47 | isDoneAFlag = 0xFF;
-  bne $t5, $t6, __Octa_RET_MARK_DONE_A               ## L:1061 |     48 | if(isDoneAFlag != isDoneBFlag)goto __Octa_RET_MARK_DONE_A;
-  sw $t0, 40($zero)                                  ## L:1059 |    *50 | store(totalDistA, ZERO, 40);
-  break # inline-ASM                                 ## L:1062 |      0 | asm("break");
+  addiu $t5, $zero, 255                              ## L:1102 |     47 | isDoneAFlag = 0xFF;
+  bne $t5, $t6, __Octa_RET_MARK_DONE_A               ## L:1103 |     48 | if(isDoneAFlag != isDoneBFlag)goto __Octa_RET_MARK_DONE_A;
+  sw $t0, 40($zero)                                  ## L:1101 |    *50 | store(totalDistA, ZERO, 40);
+  break # inline-ASM                                 ## L:1104 |      0 | asm("break");
   Octa_markDoneB:
-  addiu $t6, $zero, 255                              ## L:1068 |     51 | isDoneBFlag = 0xFF;
-  bne $t5, $t6, __Octa_RET_MARK_DONE_B               ## L:1069 |     52 | if(isDoneAFlag != isDoneBFlag)goto __Octa_RET_MARK_DONE_B;
-  sw $t1, 72($zero)                                  ## L:1067 |    *54 | store(totalDistB, ZERO, 72);
-  break # inline-ASM                                 ## L:1070 |      0 | asm("break");
+  addiu $t6, $zero, 255                              ## L:1110 |     51 | isDoneBFlag = 0xFF;
+  bne $t5, $t6, __Octa_RET_MARK_DONE_B               ## L:1111 |     52 | if(isDoneAFlag != isDoneBFlag)goto __Octa_RET_MARK_DONE_B;
+  sw $t1, 72($zero)                                  ## L:1109 |    *54 | store(totalDistB, ZERO, 72);
+  break # inline-ASM                                 ## L:1112 |      0 | asm("break");
 
 OVERLAY_CODE_END:
 

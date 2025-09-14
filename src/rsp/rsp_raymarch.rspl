@@ -20,6 +20,9 @@ state {
 /**
  * RSPL relies on some vector registers setup by 'rsp_queue.inc' in libdragon.
  * Replicate the setup here for the two shift and zero register values.
+ *
+ * This function is only run once per frame to reset things.
+ * So perf inside here doesn't matter much.
  */
 @NoReturn
 function Main()
@@ -28,7 +31,40 @@ function Main()
   vec16<$v30> VSHIFT; // make writable
   vec16<$v31> VSHIFT8;
 
+  // clean all regs to be zero, some SDF parts rely on that initial state
   asm("vxor $v00, $v00, $v00");
+  asm("vxor $v01, $v01, $v01");
+  asm("vxor $v02, $v02, $v02");
+  asm("vxor $v03, $v03, $v03");
+  asm("vxor $v04, $v04, $v04");
+  asm("vxor $v05, $v05, $v05");
+  asm("vxor $v06, $v06, $v06");
+  asm("vxor $v07, $v07, $v07");
+  asm("vxor $v08, $v08, $v08");
+  asm("vxor $v09, $v09, $v09");
+  asm("vxor $v10, $v10, $v10");
+  asm("vxor $v11, $v11, $v11");
+  asm("vxor $v12, $v12, $v12");
+  asm("vxor $v13, $v13, $v13");
+  asm("vxor $v14, $v14, $v14");
+  asm("vxor $v15, $v15, $v15");
+  asm("vxor $v16, $v16, $v16");
+  asm("vxor $v17, $v17, $v17");
+  asm("vxor $v18, $v18, $v18");
+  asm("vxor $v19, $v19, $v19");
+  asm("vxor $v20, $v20, $v20");
+  asm("vxor $v21, $v21, $v21");
+  asm("vxor $v22, $v22, $v22");
+  asm("vxor $v23, $v23, $v23");
+  asm("vxor $v24, $v24, $v24");
+  asm("vxor $v25, $v25, $v25");
+  asm("vxor $v26, $v26, $v26");
+  asm("vxor $v27, $v27, $v27");
+  asm("vxor $v28, $v28, $v28");
+  asm("vxor $v29, $v29, $v29");
+  asm("vxor $v30, $v30, $v30");
+  asm("vxor $v31, $v31, $v31");
+
   u16 tmp = 0x8000;
   VSHIFT8.x = tmp; tmp >>= 1;
   VSHIFT8.y = tmp; tmp >>= 1;
@@ -96,6 +132,12 @@ macro unsafeVSR8(vec32 out, vec32 in)
   asm_op("vmadl", out:sfract, in:sfract, VSHIFT8.W);
 }
 
+/**
+ * SDF/Raymarch loops.
+ * Each function is an entire raymarch loop using a specific SDF.
+ * The code is duped to avoid costly branches inside.
+ * Check 'raymarch.rspl' for the actual implementation.
+ */
 #define SDF_REPEAT 1
 
 #define SDF_NAME Main
