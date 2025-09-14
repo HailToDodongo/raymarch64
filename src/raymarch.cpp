@@ -26,7 +26,25 @@ namespace
 {
   #include "sdf/sdf.h"
 
-  inline uint32_t shadeResult(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist)
+  typedef float (*FuncSDF)(const fm_vec3_t&);
+  typedef fm_vec3_t (*FuncNorm)(const fm_vec3_t&);
+  typedef uint32_t (*FuncShade)(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist);
+
+  struct SDFConf
+  {
+    FuncSDF fnSDF;
+    FuncNorm fnNorm;
+    FuncShade fnShade;
+    uint32_t fnUcode;
+    uint32_t bgColor;
+  };
+
+
+  constexpr uint32_t createBgColor(color_t c) {
+    return (((int)c.r >> 3) << 11) | (((int)c.g >> 3) << 6) | (((int)c.b >> 3) << 1) | (c.a >> 7);
+  }
+
+  inline uint32_t shadeResultA(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist)
   {
     float distNorm = (RENDER_DIST - dist);
     float distNormInv = distNorm * (1.0f / RENDER_DIST);
@@ -66,7 +84,36 @@ namespace
     ;
   }
 
-  template<bool LOW_RES>
+  inline uint32_t shadeResultCylinder(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist)
+  {
+    float distNorm = (RENDER_DIST - dist);
+    float distNormInv = distNorm * (1.0f / RENDER_DIST);
+
+    float light = -Math::dot(norm, dir);
+    light = fmaxf(light, 0);
+
+    float s = hitPos.y * 24;
+    float base = ((int)(s) & 1) ? 5.0f : 15.0f;
+    s = hitPos.y*2;
+
+    fm_vec3_t col{
+      fm_sinf(s + 0.0f) * base + base,
+      fm_sinf(s + 2.0f) * base + base,
+      fm_sinf(s + 4.0f) * base + base,
+    };
+
+    //col *= (distNormInv * light);
+    col = Math::mix(
+      {22.0f, 22.0f, 31.0f}, col * light, distNormInv
+    );
+
+    return ((int)(col.x) << 11) |
+           ((int)(col.y) << 6) |
+           ((int)(col.z) << 1)
+    ;
+  }
+
+  template<SDFConf CONF, bool LOW_RES>
   void drawGeneric(void* fb, float time)
   {
     constexpr int W = OUTPUT_WIDTH / (LOW_RES ? 4 : 1);
@@ -76,8 +123,6 @@ namespace
     auto buff = (char*)fb;
 
     float angle = (time + 3.5f) * 0.7f;
-    lerpFactor = fm_sinf(time*4.0f) * 0.5f + 0.5f;
-    //lerpFactor = 0.5f;
 
     fm_vec3_t camPos, camDir;
 
@@ -86,7 +131,7 @@ namespace
     camPos.z = fm_sinf(angle*0.6f) * 3.15f;
     camDir = Math::normalize(fm_vec3_t{0,0,0} - camPos);
 
-    float initialDist = SDF::main(Math::fastClamp(camPos));
+    float initialDist = CONF.fnSDF(Math::fastClamp(camPos));
     UCode::reset({FP32{camPos.x}, FP32{camPos.y}, FP32{camPos.z}}, lerpFactor, initialDist);
 
     constexpr fm_vec3_t worldUp{0,1,0};
@@ -126,7 +171,7 @@ namespace
 
         auto startNextUcode = [&]() {
           UCode::setRayDirections(dirFp0, dirFp1);
-          UCode::run(RSP_RAY_CODE_RayMarch);
+          UCode::run(CONF.fnUcode);
         };
 
         advanceDir();
@@ -151,11 +196,11 @@ namespace
           startNextUcode();
           MEMORY_BARRIER();
 
-          uint32_t col;
+          uint32_t col = 0;
           auto applyShade = [&](float distTotal, const fm_vec3_t &oldDir) {
             auto hitPos = camPos + (oldDir * distTotal);
-            auto norm = SDF::mainNormals(hitPos);
-            col |= shadeResult(norm, hitPos, oldDir, distTotal);
+            auto norm = CONF.fnNorm(hitPos);
+            col |= CONF.fnShade(norm, hitPos, oldDir, distTotal);
           };
 
           auto writeLowRes = [&]() {
@@ -168,13 +213,24 @@ namespace
             col = 0;
           };
 
-          col = 0;
-          if(distTotalA < FP32{RENDER_DIST})applyShade(distTotalA.toFloat(), dir0);
+          if constexpr (!CONF.bgColor) {
+            if(distTotalA < FP32{RENDER_DIST})applyShade(distTotalA.toFloat(), dir0);
+          } else {
+            if(distTotalA < FP32{RENDER_DIST})
+              applyShade(distTotalA.toFloat(), dir0);
+            else col = CONF.bgColor;
+          }
 
           if constexpr(LOW_RES)writeLowRes();
 
           col <<= 16;
-          if(distTotalB < FP32{RENDER_DIST})applyShade(distTotalB.toFloat(), dir1);
+          if constexpr (!CONF.bgColor) {
+            if(distTotalB < FP32{RENDER_DIST})applyShade(distTotalB.toFloat(), dir1);
+          } else {
+            if(distTotalB < FP32{RENDER_DIST})
+              applyShade(distTotalB.toFloat(), dir1);
+            else col |= CONF.bgColor;
+          }
 
           if constexpr (LOW_RES) {
             writeLowRes();
@@ -191,19 +247,63 @@ namespace
         UCode::stop();
     }
   }
+
+  template<SDFConf CONF>
+  inline void drawGenericRes(void* fb, float time, bool lowRes)
+  {
+    if(lowRes) {
+      drawGeneric<CONF, true>(fb, time);
+    } else {
+      drawGeneric<CONF, false>(fb, time);
+    }
+  }
+
+  constexpr SDFConf SDF_MAIN = {
+    SDF::main,
+    SDF::mainNormals,
+    shadeResultA,
+    RSP_RAY_CODE_RayMarch_Main,
+    0
+  };
+
+  constexpr SDFConf SDF_SPHERE = {
+    SDF::sphere,
+    SDF::sphereNormals,
+    shadeResultA,
+    RSP_RAY_CODE_RayMarch_Sphere,
+    0
+  };
+
+  constexpr SDFConf SDF_CYLINDER = {
+    SDF::cylinder,
+    SDF::cylinderNormals,
+    shadeResultCylinder,
+    RSP_RAY_CODE_RayMarch_Cylinder,
+    createBgColor({0xFF,0xAA,0xFF})
+  };
 }
+
 
 void RayMarch::init() {
   rsp_load(&rsp_raymarch);
   UCode::sync();
 }
 
-void RayMarch::draw(void* fb, float time, bool lowRes)
+void RayMarch::draw(void* fb, float time, int sdfIdx, bool lowRes)
 {
-  if(lowRes) {
-    drawGeneric<true>(fb, time);
-  } else {
-    drawGeneric<false>(fb, time);
+  switch(sdfIdx)
+  {
+    case 0:
+      lerpFactor = fm_sinf(time*4.0f) * 0.5f + 0.5f;
+      return drawGenericRes<SDF_MAIN>(fb, time, lowRes);
+
+    case 1:
+      lerpFactor = fm_sinf(time*4.0f) * 0.125f + 0.125f;
+      return drawGenericRes<SDF_SPHERE>(fb, time, lowRes);
+
+    case 2:
+      lerpFactor = fm_sinf(time*3.0f) * 0.1f + 0.15f;
+      return drawGenericRes<SDF_CYLINDER>(fb, time, lowRes);
   }
 }
 

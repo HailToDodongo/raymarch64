@@ -20,6 +20,7 @@ void Text::setFrameBuffer(const surface_t &fb) {
 }
 
 int Text::print(int x, int y, const char *str) {
+  x &= ~0b11;
   uint64_t *buffStart = (uint64_t*)&fbBuffer[y * fbStride + x*2];
 
   while(*str)

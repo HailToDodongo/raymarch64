@@ -55,6 +55,9 @@ int main()
   bool lowRes = false;
   bool redrawMenu = true;
 
+  int sdfIdx = 2;
+  constexpr int MAX_SDF_IDX = 2;
+
   wait_ms(500);
 
   for(;;) 
@@ -67,24 +70,31 @@ int main()
     auto press = joypad_get_buttons_pressed(JOYPAD_PORT_1);
     if(press.a) { lowRes = !lowRes; redrawMenu = true; }
 
+    if(press.l) { --sdfIdx; redrawMenu = true; }
+    if(press.r) { ++sdfIdx; redrawMenu = true; }
+
+    if(sdfIdx < 0)sdfIdx = MAX_SDF_IDX;
+    if(sdfIdx > MAX_SDF_IDX)sdfIdx = 0;
     /*while(freeFB == 0) {
       vi_wait_vblank();
     }*/
+
+    if(redrawMenu) {
+      Text::printf(130, 222, "[L/R] SDF:%d", sdfIdx);
+      Text::print(240, 222, lowRes ? "[A] 1/4x" : "[A] 1x``");
+      redrawMenu = false;
+    }
 
     time += 0.025f;
 
     disable_interrupts();
     //freeFB -= 1;
     auto ticks = get_ticks();
-    RayMarch::draw(fb->buffer, time, lowRes);
+    RayMarch::draw(fb->buffer, time, sdfIdx, lowRes);
     ticks = get_ticks() - ticks;
     enable_interrupts();
 
     Text::printf(16, 222, "%.2fms``", TICKS_TO_US(ticks) * (1.0f / 1000.0f));
-    if(redrawMenu) {
-      Text::print(280, 222, lowRes ? "1/4x" : "1x``");
-      redrawMenu = false;
-    }
 
     //vi_show(fb);
     //vi_wait_vblank();

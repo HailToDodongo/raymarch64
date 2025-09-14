@@ -1,0 +1,210 @@
+/**
+* @copyright 2025 - Max Bebök
+* @license MIT
+*/
+
+@NoReturn
+function RayMarch_${SDF_NAME}()
+{
+  // globals, loaded once and preserved across this function call
+  vec32<$v04> ONE;
+  vec32<$v06> SPHERE_RAD;
+  vec32<$v08> LERP_FACTOR;
+  vec32<$v10> rayPosOrg;
+  s32<$a0> RENDER_DIST;
+  s32<$a1> STOP_DIST;
+
+  vec32<$v12> rayDir;
+
+  u8<$t5> isDoneAFlag = 1;
+  u8<$t6> isDoneBFlag = 1;
+
+  //u32 maxSteps = 64;
+  s32 totalDistA = 0;
+  s32 totalDistB = 0;
+  s32 distA;
+  s32 distB;
+
+  vec32 posSq;
+  posSq:sint = 0;
+  vec32 res;
+
+  res:sint = 0;
+  res:sfract.x = load(ZERO, DMEM_INIT_DIST).y;
+  res:sfract.X = load(ZERO, DMEM_INIT_DIST).y;
+
+  vec32 totalDist = 0;
+
+  vec32 nextPos;
+  vec16 currDist;
+  u8 tmp;
+
+  // @TODO: 16bit fractional?
+  rayDir:sint.xyzw = load(ZERO, DMEM_RAYDIR_A).xyzw;
+  rayDir:sint.XYZW = load(ZERO, DMEM_RAYDIR_B).xyzw;
+  rayDir >>= 15;
+
+  //u32 iterCount = 128;
+  loop {
+    totalDist += res;
+
+    @Barrier("lenA") store(res.x, ZERO, DMEM_LAST_DIST_A);
+    @Barrier("lenB") store(res.X, ZERO, DMEM_LAST_DIST_B);
+
+    @Barrier("lenA") distA = load(ZERO, DMEM_LAST_DIST_A);
+    @Barrier("lenB") distB = load(ZERO, DMEM_LAST_DIST_B);
+
+    totalDistA += distA;
+    totalDistB += distB;
+
+    u8 isDoneA = distA < STOP_DIST;
+    u8 isDoneB = distB < STOP_DIST;
+    {
+      tmp = totalDistA > RENDER_DIST;
+      isDoneA |= tmp;
+      tmp = totalDistB > RENDER_DIST;
+      isDoneB |= tmp;
+    }
+
+    nextPos = ONE * rayPosOrg;
+    nextPos = rayDir +* totalDist.xxxxXXXX;
+
+    vec32 nextPosFloor;
+    nextPosFloor:sint = ONE +* SPHERE_RAD:sfract.z;
+
+    nextPos:sint -= nextPosFloor:sint;
+    undef nextPosFloor;
+
+    if(isDoneA == isDoneAFlag)goto ${SDF_NAME}_markDoneA;
+    __${SDF_NAME}_RET_MARK_DONE_A:
+
+      posSq:sfract = nextPos * nextPos;
+
+    if(isDoneB == isDoneBFlag)goto ${SDF_NAME}_markDoneB;
+    __${SDF_NAME}_RET_MARK_DONE_B:
+
+      //////// SDF ////////
+      LERP_FACTOR:ufract.x = load(ZERO, DMEM_LERP_A).x;
+      LERP_FACTOR:ufract.y = load(ZERO, DMEM_LERP_B).x;
+      LERP_FACTOR:ufract.X = load(ZERO, DMEM_LERP_A).x;
+      LERP_FACTOR:ufract.Y = load(ZERO, DMEM_LERP_B).x;
+
+      vec32 tmpA;
+      vec32 tmpB;
+
+      #ifdef SDF_FUNC_MAIN
+      { // Sphere & Torus
+        vec32 resSphere;
+
+        res = posSq:sfract + posSq:sfract.zzzzZZZZ;
+        tmpB = invSqrt0(res);
+        tmpB = invSqrt1(res);
+
+        tmpA = res:sfract + posSq:sfract.yyyyYYYY;
+
+        res = unsafeVSR8(tmpB);
+
+        resSphere = invSqrt0(tmpA);
+        s32 resSphereA = resSphere.x;
+
+        tmpB:sfract.x = invert_half(res).x;
+        tmpB:sfract.X = invert_half(res).X;
+
+        resSphere = invSqrt1(tmpA);
+        s32 resSphereB = resSphere.X;
+
+        resSphereA >>= 8;
+        resSphereB >>= 8;
+        @Barrier("a") store(resSphereA, ZERO, 120);
+        @Barrier("b") store(resSphereB, ZERO, 124);
+
+        res:ufract = tmpB:ufract - SPHERE_RAD:ufract.x;
+        res:sint = VZERO - SPHERE_RAD:sint.x;
+
+        res:sfract = res * res;
+        tmpA = ONE +* posSq.yyyyYYYY;
+
+        @Barrier("a") tmpB.x = load(ZERO, 120).x;
+        @Barrier("b") tmpB.X = load(ZERO, 124).x;
+
+        //tmpB = unsafeVSR8(resSphere);
+
+        // sqrt
+        res = invSqrt0(tmpA);
+        res = invSqrt1(tmpA);
+
+        resSphere:sfract.x = invert_half(tmpB).x;
+
+        //tmpB = res >> 8;
+        tmpA = unsafeVSR8(res);
+
+        resSphere:sfract.X = invert_half(tmpB).X;
+
+        res:sfract.x = invert_half(tmpA).x;
+        res:sfract.X = invert_half(tmpA).X;
+
+        resSphere:ufract = resSphere:ufract - SPHERE_RAD:ufract.x;
+        resSphere:sint = VZERO - VZERO; // sign extend
+
+        res:ufract = res:ufract - SPHERE_RAD:ufract.y;
+        res:sint = VZERO - VZERO; // sign extend
+
+      // LERP
+      resSphere = resSphere * LERP_FACTOR:ufract.yyyyYYYY;
+      res = res +* LERP_FACTOR:ufract.xxxxXXXX;
+    }
+    #endif
+
+    #ifdef SDF_FUNC_SPHERE
+    {
+      res = posSq:sfract + posSq:sfract.zzzzZZZZ;
+      res += posSq:sfract.yyyyYYYY;
+
+      tmpA = invSqrt0(res);
+      tmpB = invSqrt1(res);
+
+      tmpA = unsafeVSR8(tmpA);
+      tmpB = unsafeVSR8(tmpB);
+
+      res.x = invert_half(tmpA).x;
+      res.X = invert_half(tmpB).X;
+
+      res -= LERP_FACTOR.yyyyYYYY;
+    }
+    #endif
+
+    #ifdef SDF_FUNC_CYLINDER
+    {
+      res = posSq:sfract + posSq:sfract.zzzzZZZZ;
+
+      tmpA = invSqrt0(res);
+      tmpB = invSqrt1(res);
+
+      tmpA = unsafeVSR8(tmpA);
+      tmpB = unsafeVSR8(tmpB);
+
+      res.x = invert_half(tmpA).x;
+      res.X = invert_half(tmpB).X;
+
+      res -= LERP_FACTOR.yyyyYYYY;
+    }
+    #endif
+
+  }
+
+  ${SDF_NAME}_markDoneA:
+  {
+    store(totalDistA, ZERO, DMEM_TOTAL_DIST_A);
+    isDoneAFlag = 0xFF; // only run this function once
+    if(isDoneAFlag != isDoneBFlag)goto __${SDF_NAME}_RET_MARK_DONE_A;
+    asm("break");
+  }
+
+  ${SDF_NAME}_markDoneB:
+  {
+    store(totalDistB, ZERO, DMEM_TOTAL_DIST_B);
+    isDoneBFlag = 0xFF;
+    if(isDoneAFlag != isDoneBFlag)goto __${SDF_NAME}_RET_MARK_DONE_B;
+    asm("break");
+  }
+}

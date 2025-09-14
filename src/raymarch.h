@@ -8,5 +8,5 @@ namespace RayMarch
 {
   void init();
 
-  void draw(void* fb, float time, bool lowRes);
+  void draw(void* fb, float time, int sdfIdx, bool lowRes);
 }

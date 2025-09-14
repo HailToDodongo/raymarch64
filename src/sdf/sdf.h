@@ -27,15 +27,6 @@ namespace SDF {
     return std::sqrt(distSq);
   }
 
-  float cylinder(const fm_vec3_t& p) {
-      float r = 0.2f + (p.y*p.y);
-      constexpr float h = 0.25f;
-      float d[2]{ sqrtf(p.x*p.x + p.z*p.z) - r, fabsf(p.y) - h };
-      d[0] = std::max(d[0], 0.0f);
-      d[1] = std::max(d[1], 0.0f);
-      return std::sqrt(d[0]*d[0] + d[1]*d[1]);
-  }
-
   fm_vec3_t mainNormals(const fm_vec3_t& p_)
   {
       /*assert(p.x > -0.5f);
@@ -70,6 +61,28 @@ namespace SDF {
       float distTorus = sqrtf(qx*qx + pSq.y) - r2;
 
       return Math::mix(distTorus, distSphere, lerpFactor);
+  }
+
+  float sphere(const fm_vec3_t& p) {
+      constexpr float r = 0.25f;
+      return sqrtf(p.x*p.x + p.y*p.y + p.z*p.z) - r;
+  }
+
+  fm_vec3_t sphereNormals(const fm_vec3_t& p) {
+      return Math::normalizeUnsafe(
+        Math::fastClamp(p)
+      );
+  }
+
+  float cylinder(const fm_vec3_t& p) {
+      constexpr float r = 0.25f;
+      return sqrtf(p.x*p.x + p.z*p.z) - r;
+  }
+
+  fm_vec3_t cylinderNormals(const fm_vec3_t& p) {
+      return Math::normalizeUnsafe(
+        Math::fastClamp(fm_vec3_t{p.x, 0, p.z})
+      );
   }
 }
 
