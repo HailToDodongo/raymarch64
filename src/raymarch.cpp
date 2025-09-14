@@ -113,6 +113,36 @@ namespace
     ;
   }
 
+  inline uint32_t shadeResultFlat(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist)
+  {
+    float distNorm = (RENDER_DIST - dist);
+    float distNormInv = distNorm * (1.0f / RENDER_DIST);
+
+    float light = -Math::dot(norm, dir);
+    light = fmaxf(light, 0);
+    light = fminf(light + 0.25f, 1);
+
+    int phase = (int)(hitPos.x+0.5f) + (int)(hitPos.z+0.5f) + (int)(hitPos.y+0.5f);
+    float s = phase * 32;
+
+    constexpr float base = 15.5f;
+
+    fm_vec3_t col{
+      fm_sinf(s + 0.0f) * base + base,
+      fm_sinf(s + 2.0f) * base + base,
+      fm_sinf(s + 4.0f) * base + base,
+    };
+
+    col = Math::mix(
+      {31.0f, 11.0f, 11.0f}, col * light, distNormInv
+    );
+
+    return ((int)(col.x) << 11) |
+           ((int)(col.y) << 6) |
+           ((int)(col.z) << 1)
+    ;
+  }
+
   template<SDFConf CONF, bool LOW_RES>
   void drawGeneric(void* fb, float time)
   {
@@ -281,8 +311,15 @@ namespace
     RSP_RAY_CODE_RayMarch_Cylinder,
     createBgColor({0xFF,0xAA,0xFF})
   };
-}
 
+  constexpr SDFConf SDF_OCTA = {
+    SDF::octa,
+    SDF::octaNormals,
+    shadeResultFlat,
+    RSP_RAY_CODE_RayMarch_Octa,
+    createBgColor({0xFF,0x55,0x55})
+  };
+}
 
 void RayMarch::init() {
   rsp_load(&rsp_raymarch);
@@ -304,6 +341,10 @@ void RayMarch::draw(void* fb, float time, int sdfIdx, bool lowRes)
     case 2:
       lerpFactor = fm_sinf(time*3.0f) * 0.1f + 0.15f;
       return drawGenericRes<SDF_CYLINDER>(fb, time, lowRes);
+
+    case 3:
+      lerpFactor = (fm_sinf(time*3.0f) * 0.22f + 0.22f) + 0.05f;
+      return drawGenericRes<SDF_OCTA>(fb, time, lowRes);
   }
 }
 

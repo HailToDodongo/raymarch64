@@ -55,8 +55,8 @@ int main()
   bool lowRes = false;
   bool redrawMenu = true;
 
-  int sdfIdx = 2;
-  constexpr int MAX_SDF_IDX = 2;
+  constexpr int MAX_SDF_IDX = 3;
+  int sdfIdx = MAX_SDF_IDX;
 
   wait_ms(500);
 

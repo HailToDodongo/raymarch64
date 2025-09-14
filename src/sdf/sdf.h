@@ -84,6 +84,28 @@ namespace SDF {
         Math::fastClamp(fm_vec3_t{p.x, 0, p.z})
       );
   }
+
+  float octa(const fm_vec3_t& p) {
+    fm_vec3_t pAbs{
+      fabsf(p.x),
+      fabsf(p.y),
+      fabsf(p.z)
+    };
+    float sum = pAbs.x + pAbs.y + pAbs.z;
+    return (sum - lerpFactor) * 0.5773f;
+  }
+
+  fm_vec3_t octaNormals(const fm_vec3_t& p_) {
+    auto p = Math::fastClamp(p_);
+    // sharp flat normals
+    fm_vec3_t n{
+      (p.x >= 0) ? 1.0f : -1.0f,
+      (p.y >= 0) ? 1.0f : -1.0f,
+      (p.z >= 0) ? 1.0f : -1.0f,
+    };
+    return Math::normalizeUnsafe(n);
+  }
+
 }
 
 #pragma GCC pop_options

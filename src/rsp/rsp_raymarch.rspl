@@ -17,29 +17,6 @@ state {
   vec16 _DUMMY_;
 }
 
-// See rspq_triangle.inc
-function RDPQ_Triangle(
-  u32<$a0> triCmd,
-  u16<$a1> vtx1, u16<$a2> vtx2, u16<$a3> vtx3,
-  u16<$v0> cull, u16<$s3> ptrDMEM
-);
-
-// DMA from RDRAM into DMEM
-macro dmaInAsync(u32 addrRDRAM, u32 addrDMEM, u32 size)
-{
-  @Barrier("DMA") set_dma_addr_rsp(addrDMEM);
-  @Barrier("DMA") set_dma_addr_rdram(addrRDRAM);
-  @Barrier("DMA") set_dma_read(size);
-}
-
-// DMA from DMEM into RDRAM
-macro dmaOutAsync(u32 addrRDRAM, u32 addrDMEM, u32 size)
-{
-  @Barrier("DMA") set_dma_addr_rsp(addrDMEM);
-  @Barrier("DMA") set_dma_addr_rdram(addrRDRAM);
-  @Barrier("DMA") set_dma_write(size);
-}
-
 /**
  * RSPL relies on some vector registers setup by 'rsp_queue.inc' in libdragon.
  * Replicate the setup here for the two shift and zero register values.
@@ -72,6 +49,7 @@ function Main()
   SPHERE_RAD.x = 0.25;
   SPHERE_RAD.y = 0.075;
   SPHERE_RAD.z = 0.5;
+  SPHERE_RAD.w = 0.5773;
 
   SPHERE_RAD.X = 2.5;
   SPHERE_RAD.Y = 0.2;
@@ -118,6 +96,8 @@ macro unsafeVSR8(vec32 out, vec32 in)
   asm_op("vmadl", out:sfract, in:sfract, VSHIFT8.W);
 }
 
+#define SDF_REPEAT 1
+
 #define SDF_NAME Main
 #define SDF_FUNC_MAIN 1
   #include "raymarch.rspl"
@@ -134,4 +114,12 @@ macro unsafeVSR8(vec32 out, vec32 in)
 #define SDF_FUNC_CYLINDER 1
   #include "raymarch.rspl"
 #undef SDF_FUNC_CYLINDER
+#undef SDF_NAME
+
+#undef SDF_REPEAT
+
+#define SDF_NAME Octa
+#define SDF_FUNC_OCTA 1
+  #include "raymarch.rspl"
+#undef SDF_FUNC_OCTA
 #undef SDF_NAME

@@ -69,25 +69,38 @@ function RayMarch_${SDF_NAME}()
     nextPos = ONE * rayPosOrg;
     nextPos = rayDir +* totalDist.xxxxXXXX;
 
-    vec32 nextPosFloor;
-    nextPosFloor:sint = ONE +* SPHERE_RAD:sfract.z;
+    #ifdef SDF_REPEAT
+      vec32 nextPosFloor;
+      nextPosFloor:sint = ONE +* SPHERE_RAD:sfract.z;
 
-    nextPos:sint -= nextPosFloor:sint;
-    undef nextPosFloor;
+      nextPos:sint -= nextPosFloor:sint;
+      undef nextPosFloor;
+    #endif
+
+    #ifdef SDF_FUNC_OCTA
+      LERP_FACTOR:ufract.y = load(ZERO, DMEM_LERP_B).x;
+    #endif
 
     if(isDoneA == isDoneAFlag)goto ${SDF_NAME}_markDoneA;
     __${SDF_NAME}_RET_MARK_DONE_A:
 
+    #ifdef SDF_FUNC_OCTA
+      posSq:sint = 0;
+      posSq:sfract = abs(nextPos:sfract);
+    #else
       posSq:sfract = nextPos * nextPos;
+    #endif
 
     if(isDoneB == isDoneBFlag)goto ${SDF_NAME}_markDoneB;
     __${SDF_NAME}_RET_MARK_DONE_B:
 
       //////// SDF ////////
-      LERP_FACTOR:ufract.x = load(ZERO, DMEM_LERP_A).x;
-      LERP_FACTOR:ufract.y = load(ZERO, DMEM_LERP_B).x;
-      LERP_FACTOR:ufract.X = load(ZERO, DMEM_LERP_A).x;
-      LERP_FACTOR:ufract.Y = load(ZERO, DMEM_LERP_B).x;
+      #ifndef SDF_FUNC_OCTA
+        LERP_FACTOR:ufract.x = load(ZERO, DMEM_LERP_A).x;
+        LERP_FACTOR:ufract.y = load(ZERO, DMEM_LERP_B).x;
+        LERP_FACTOR:ufract.X = load(ZERO, DMEM_LERP_A).x;
+        LERP_FACTOR:ufract.Y = load(ZERO, DMEM_LERP_B).x;
+      #endif
 
       vec32 tmpA;
       vec32 tmpB;
@@ -187,6 +200,16 @@ function RayMarch_${SDF_NAME}()
       res.X = invert_half(tmpB).X;
 
       res -= LERP_FACTOR.yyyyYYYY;
+    }
+    #endif
+
+    #ifdef SDF_FUNC_OCTA
+    {
+      tmpA = posSq - LERP_FACTOR.y;
+      tmpB = posSq + posSq:sfract.zzzzZZZZ;
+      tmpB = tmpB + tmpA.yyyyYYYY;
+
+      res = tmpB * SPHERE_RAD.w;
     }
     #endif
 
