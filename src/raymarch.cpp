@@ -202,6 +202,9 @@ namespace
 
         advanceDir();
 
+        MEMORY_BARRIER();
+        startNextUcode();
+        UCode::stop();
         startNextUcode();
         MEMORY_BARRIER();
 
@@ -214,6 +217,7 @@ namespace
         do
         {
           UCode::sync();
+          MEMORY_BARRIER();
           auto distTotalA = UCode::getTotalDist(0);
           auto distTotalB = UCode::getTotalDist(1);
 
