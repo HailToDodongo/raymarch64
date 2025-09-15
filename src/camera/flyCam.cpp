@@ -46,7 +46,7 @@ void FlyCam::update(float deltaTime)
 
   if(joypad.btn.z) {
     camRotX += (float)joypad.stick_x * camRotSpeed;
-    camRotY += (float)joypad.stick_y * camRotSpeed;
+    camRotY -= (float)joypad.stick_y * camRotSpeed;
   } else {
     camPos += camDir * ((float)joypad.stick_y * camSpeed);
     camPos.v[0] += camDir.v[2] * (float)joypad.stick_x * -camSpeed;

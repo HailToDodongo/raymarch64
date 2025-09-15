@@ -30,6 +30,8 @@ namespace
   typedef fm_vec3_t (*FuncNorm)(const fm_vec3_t&);
   typedef uint32_t (*FuncShade)(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist);
 
+  fm_vec3_t lightPos{0,0,0};
+
   struct SDFConf
   {
     FuncSDF fnSDF;
@@ -135,6 +137,48 @@ namespace
     col = Math::mix(
       {31.0f, 11.0f, 11.0f}, col * light, distNormInv
     );
+
+    return ((int)(col.x) << 11) |
+           ((int)(col.y) << 6) |
+           ((int)(col.z) << 1)
+    ;
+  }
+
+  inline uint32_t shadeResultPointLight(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist)
+  {
+    float distNorm = (RENDER_DIST - dist);
+    float distNormInv = distNorm * (1.0f / RENDER_DIST);
+
+    constexpr float LIGHT_RANGE = 1.0f / 5.0f;
+    fm_vec3_t toLight = lightPos - hitPos;
+    float ptLightDist = Math::length(toLight);
+    ptLightDist *= LIGHT_RANGE;
+    ptLightDist *= ptLightDist;
+
+    float lightPoint = Math::dot(norm, Math::normalizeUnsafe(toLight));
+    lightPoint = fmaxf(lightPoint, 0);
+    lightPoint = fminf(lightPoint + 0.0125f, 1);
+    lightPoint *= (1.0f - Math::clamp(ptLightDist, 0.0f, 1.0f));
+
+    float light = lightPoint;
+
+    constexpr float base = 15.5f;
+
+    fm_vec3_t col;
+
+    int phase = (int)(hitPos.x+0.5f) + (int)(hitPos.z+0.5f) + (int)(hitPos.y+0.5f);
+    switch(phase & 0b110) {
+        default:
+        case 0b000: col = {31.0f, 15.0f, 15.0f}; break;
+        case 0b010: col = {15.0f, 31.0f, 15.0f}; break;
+        case 0b100: col = {31.0f, 31.0f, 15.0f}; break;
+        case 0b110: col = {31.0f, 31.0f, 31.0f}; break;
+      }
+
+    /*col = Math::mix(
+      {31.0f, 11.0f, 11.0f}, col * light, distNormInv
+    );*/
+    col *= (light * distNormInv);
 
     return ((int)(col.x) << 11) |
            ((int)(col.y) << 6) |
@@ -299,7 +343,7 @@ namespace
   constexpr SDFConf SDF_SPHERE = {
     SDF::sphere,
     SDF::sphereNormals,
-    shadeResultA,
+    shadeResultPointLight,
     RSP_RAY_CODE_RayMarch_Sphere,
     0
   };
@@ -335,7 +379,14 @@ void RayMarch::draw(void* fb, float time, int sdfIdx, bool lowRes)
       return drawGenericRes<SDF_MAIN>(fb, time, lowRes);
 
     case 1:
-      lerpFactor = fm_sinf(time*4.0f) * 0.125f + 0.125f;
+      //lerpFactor = fm_sinf(time*1.0f) * 0.125f + 0.125f;
+      lerpFactor = 0.275f;
+      lightPos = {
+        fm_sinf(time*1.7f) * 0.5f,
+        fm_cosf(time*1.5f) * 0.5f + 0.5f,
+        fm_sinf(time*1.3f + 3.14f) * 0.5f
+      };
+      lightPos *= 4.0f;
       return drawGenericRes<SDF_SPHERE>(fb, time, lowRes);
 
     case 2:
