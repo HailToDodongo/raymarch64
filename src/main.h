@@ -4,6 +4,7 @@
 */
 #pragma once
 #include <libdragon.h>
+#include "camera/flyCam.h"
 
 namespace {
   // global settings
@@ -24,3 +25,6 @@ namespace {
   static_assert(OUTPUT_WIDTH % 2 == 0); // 3-pixel step in inner loop...
   static_assert((OUTPUT_WIDTH/4) % 2 == 0); // ...same in low res mode
 }
+
+// Globals
+extern FlyCam camera;

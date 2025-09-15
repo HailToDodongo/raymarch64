@@ -9,6 +9,7 @@ N64_CXXFLAGS += -std=gnu++20 -Os -fno-exceptions -fsingle-precision-constant
 
 src = $(wildcard src/*.cpp) $(wildcard src/math/*.cpp)
 src += $(wildcard src/rdp/*.cpp) $(wildcard src/rsp/*.cpp)
+src += $(wildcard src/camera/*.cpp)
 
 assets_png = $(wildcard assets/*.rgba16.png)
 

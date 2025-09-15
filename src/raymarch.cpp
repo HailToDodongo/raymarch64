@@ -151,14 +151,8 @@ namespace
 
     auto buff = (char*)fb;
 
-    float angle = (time + 3.5f) * 0.7f;
-
-    fm_vec3_t camPos, camDir;
-
-    camPos.x = fm_sinf(angle) * 2.55f;
-    camPos.y = fm_cosf(angle-1.1f) * 2.45f;
-    camPos.z = fm_sinf(angle*0.6f) * 3.15f;
-    camDir = Math::normalize(fm_vec3_t{0,0,0} - camPos);
+    fm_vec3_t camPos = camera.camPos;
+    fm_vec3_t camDir = camera.camDir;
 
     // initial distance is the same for all rays, so do it once here and send it to the ucode
     float initialDist = CONF.fnSDF(Math::fastClamp(camPos));

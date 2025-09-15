@@ -18,6 +18,7 @@ add_executable(n64raymarcher
         src/rdp/rdp.h
         src/rdp/rdp.cpp
         src/raymarch.cpp
-        src/math.cpp)
+        src/math/mathFloat.cpp
+        src/camera/flyCam.cpp)
 
 set_property(TARGET n64raymarcher PROPERTY CXX_STANDARD 23)
