@@ -49,15 +49,23 @@ void processPNG(const string& fileTex, const string& fileOut)
   uint8_t *dataCol = image.data();
   uint8_t *dataNorm = image.data() + idxNorm;
 
+  int defCount = 0;
   for (unsigned y = 0; y < TEX_DIM; ++y) {
     for (unsigned x = 0; x < TEX_DIM; ++x) {
       writeS8(dataNorm[0] - 127);
       writeS8(dataNorm[1] - 127);
-      writeU16(packRGBA5515(dataCol[0],dataCol[1],dataCol[2], false));
+      bool isDefNorm = dataNorm[2] >= 252;
+      /*if (dataNorm[2] > 253) {
+        ++defCount;
+        printf("N: %d (%d %d)\n", dataNorm[2], dataNorm[0]-127, dataNorm[1]-127);
+      }*/
+      writeU16(packRGBA5515(dataCol[0],dataCol[1],dataCol[2], isDefNorm));
       dataCol += 4;
       dataNorm += 4;
     }
   }
+
+  //printf("Def: %d / %d\n", defCount, TEX_DIM*TEX_DIM);
 
   fclose(pFile);
 }

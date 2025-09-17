@@ -219,7 +219,7 @@ namespace
 
     int phase = (int)(hitPos.x+0.5f) + (int)(hitPos.z+0.5f);
 
-    float angleY = fm_atan2f(norm.z, norm.x);// - (3.124f / 2);
+    float angleY = fm_atan2f(norm.z, norm.x);
     constexpr float ANGLE_TO_UV = (1.0f / (2.0f * 3.124f)) * (TEX_DIM * -2.0f);
 
     // Texturing
@@ -255,18 +255,26 @@ namespace
     };
 
     //auto held = joypad_get_buttons_held(JOYPAD_PORT_1);
-    normTex.z = sqrtf(1.0f - normTex.x*normTex.x - normTex.z*normTex.z);
 
-    normTex = rotVecY(normTex, norm.x, norm.z);
+    if (tex.color & (1<<5)) { // marks the Z component to be 1
+      // simplified version of the rotate assuming Z=1
+      normTex.z = 1.0f;
+      normTex = rotVecY(normTex, norm.x, norm.z);
+    } else {
+      float sq = normTex.x*normTex.x - normTex.y*normTex.y;
+      if (sq < 0.95f) {
+        normTex.z = sqrtf(1.0f - sq);
+      }
+      normTex = rotVecY(normTex, norm.x, norm.z);
+    }
+
+    constexpr auto ambientColor = fm_vec3_t{0.15f, 0.15f, 0.3f};
 
     float lightPoint = Math::dot(normTex, lightPos);
     lightPoint = fmaxf(lightPoint, 0);
 
-    auto lightColor = fm_vec3_t{1.0f, 0.8f, 0.6f} * lightPoint;
-    constexpr auto ambientColor = fm_vec3_t{0.15f, 0.15f, 0.3f};
-
+    fm_vec3_t lightColor = fm_vec3_t{1.0f, 0.8f, 0.6f} * lightPoint;
     lightColor = Math::min(lightColor + ambientColor, {1,1,1});
-
     col *= lightColor;
     col *= distNormInv;
 
@@ -550,6 +558,7 @@ void RayMarch::draw(void* fb, float time, int sdfIdx, bool lowRes)
         fm_cosf(time*1.5f) * 0.5f + 0.5f,
         fm_cosf(time*1.3f),
       };
+      lightPos = Math::normalize(lightPos);
       return drawGenericRes<SDF_TEX_SPHERE>(fb, time, lowRes);
   }
 }
