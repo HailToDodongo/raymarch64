@@ -21,7 +21,7 @@ namespace {
   constinit int redrawMenu = 4;
 
   constexpr int MAX_SDF_IDX = 5;
-  int sdfIdx = MAX_SDF_IDX;
+  int sdfIdx = 4;
 
   surface_t fbs[3] = {
     {FMT_RGBA16, SCREEN_WIDTH, SCREEN_HEIGHT, FB_STRIDE, (void*)MemMap::FB0},

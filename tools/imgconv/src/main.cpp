@@ -12,8 +12,8 @@ using namespace std;
 
 namespace
 {
-  uint16_t packRGBA5551(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-    return ((r >> 3) << 11) | ((g >> 3) << 6) | ((b >> 3) << 1) | (a >> 7);
+  uint16_t packRGBA5515(uint8_t r, uint8_t g, uint8_t b, bool a) {
+    return ((r >> 3) << 11) | ((g >> 3) << 6) | ((b >> 3) << 0) | (a ? (1<<5) : 0);
   }
 }
 
@@ -53,7 +53,7 @@ void processPNG(const string& fileTex, const string& fileOut)
     for (unsigned x = 0; x < TEX_DIM; ++x) {
       writeS8(dataNorm[0] - 127);
       writeS8(dataNorm[1] - 127);
-      writeU16(packRGBA5551(dataCol[0],dataCol[1],dataCol[2], dataCol[3]));
+      writeU16(packRGBA5515(dataCol[0],dataCol[1],dataCol[2], false));
       dataCol += 4;
       dataNorm += 4;
     }
