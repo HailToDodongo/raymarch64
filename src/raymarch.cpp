@@ -26,6 +26,16 @@ namespace
 {
   #include "sdf/sdf.h"
 
+  struct TexPixel
+  {
+    int8_t normA;
+    int8_t normB;
+    uint16_t color;
+  };
+  constexpr int TEX_DIM = 256;
+
+
+
   typedef float (*FuncSDF)(const fm_vec3_t&);
   typedef fm_vec3_t (*FuncNorm)(const fm_vec3_t&);
   typedef uint32_t (*FuncShade)(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist);
@@ -179,6 +189,77 @@ namespace
       {31.0f, 11.0f, 11.0f}, col * light, distNormInv
     );*/
     col *= (light * distNormInv);
+
+    return ((int)(col.x) << 11) |
+           ((int)(col.y) << 6) |
+           ((int)(col.z) << 1)
+    ;
+  }
+
+  fm_vec3_t rotVecY(const fm_vec3_t &v, float angle)
+  {
+    float c = fm_cosf(angle);
+    float s = fm_sinf(angle);
+    return {
+      v.x * c - v.z * s,
+      v.y,
+      v.x * s + v.z * c,
+    };
+  }
+
+  inline uint32_t shadeResultTex(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist)
+  {
+    float distNorm = (RENDER_DIST - dist);
+    float distNormInv = distNorm * (1.0f / RENDER_DIST);
+
+    int phase = (int)(hitPos.x+0.5f) + (int)(hitPos.z+0.5f);
+
+    float angleY = fm_atan2f(norm.z, norm.x) - (3.124f / 2);
+    // Texturing
+    float uv[2] {
+      (angleY * (1.0f / (2.0f * 3.124f)) + 0.5f) * (TEX_DIM * -2.0f),
+      hitPos.y * (1.2f * TEX_DIM),
+    };
+
+    int uvPixel[2] = {
+      (int)(uv[0]) & (TEX_DIM-1),
+      (int)(uv[1]) & (TEX_DIM-1),
+    };
+
+    TexPixel* texData;
+    switch (phase & 0b11) {
+      default:
+      case 0: texData = (TexPixel*)MemMap::TEX0_CACHED; break;
+      case 1: texData = (TexPixel*)MemMap::TEX1_CACHED; break;
+      case 2: texData = (TexPixel*)MemMap::TEX2_CACHED; break;
+    }
+
+    TexPixel& tex = texData[uvPixel[1] * TEX_DIM + uvPixel[0]];
+
+    fm_vec3_t col;
+    col.x = (tex.color >> 11);
+    col.y = (tex.color >> 6) & 0x1F;
+    col.z = (tex.color >> 1) & 0x1F;
+
+    fm_vec3_t normTex = {
+      (tex.normA * (1.0f / 128.0f)),
+      (tex.normB * (1.0f / 128.0f)),
+      0,
+    };
+
+    normTex.z = sqrtf(1.0f - normTex.x*normTex.x - normTex.z*normTex.z);
+    normTex = rotVecY(normTex, angleY);
+
+    float lightPoint = Math::dot(normTex, lightPos);
+    lightPoint = fmaxf(lightPoint, 0);
+
+    auto lightColor = fm_vec3_t{1.0f, 0.8f, 0.6f} * lightPoint;
+    auto ambientColor = fm_vec3_t{0.15f, 0.15f, 0.3f};
+
+    lightColor = Math::min(lightColor + ambientColor, {1,1,1});
+
+    col *= lightColor;
+    col *= distNormInv;
 
     return ((int)(col.x) << 11) |
            ((int)(col.y) << 6) |
@@ -363,11 +444,38 @@ namespace
     RSP_RAY_CODE_RayMarch_Octa,
     createBgColor({0xFF,0x55,0x55})
   };
+
+  constexpr SDFConf SDF_TEX = {
+    SDF::cylinder,
+    SDF::cylinderNormals,
+    shadeResultTex,
+    RSP_RAY_CODE_RayMarch_Cylinder,
+    0,
+  };
+
+  constexpr SDFConf SDF_TEX_SPHERE = {
+    SDF::main,
+    SDF::mainNormals,
+    shadeResultTex,
+    RSP_RAY_CODE_RayMarch_Main,
+    0,
+  };
+
+  void loadTexture(const char* path, uint32_t addr) {
+    int size = TEXTURE_BYTES;
+    auto f = asset_fopen(path, &size);
+    fread((void*)addr, 1, size, f);
+    fclose(f);
+  }
 }
 
 void RayMarch::init() {
   rsp_load(&rsp_raymarch);
   UCode::sync();
+
+  loadTexture("rom:/stone.tex", MemMap::TEX0);
+  loadTexture("rom:/tiles.tex", MemMap::TEX1);
+  loadTexture("rom:/space.tex", MemMap::TEX2);;
 }
 
 void RayMarch::draw(void* fb, float time, int sdfIdx, bool lowRes)
@@ -386,7 +494,7 @@ void RayMarch::draw(void* fb, float time, int sdfIdx, bool lowRes)
         fm_cosf(time*1.5f) * 0.5f + 0.5f,
         fm_sinf(time*1.3f + 3.14f) * 0.5f
       };
-      lightPos *= 4.0f;
+      //lightPos *= 4.0f;
       return drawGenericRes<SDF_SPHERE>(fb, time, lowRes);
 
     case 2:
@@ -396,6 +504,27 @@ void RayMarch::draw(void* fb, float time, int sdfIdx, bool lowRes)
     case 3:
       lerpFactor = (fm_sinf(time*3.0f) * 0.22f + 0.22f) + 0.05f;
       return drawGenericRes<SDF_OCTA>(fb, time, lowRes);
+
+    case 4: {
+      lerpFactor = 0.3f;
+      lightPos = {
+        fm_sinf(time*1.3f),
+        0.5f,
+        fm_cosf(time*1.3f),
+      };
+      lightPos = Math::normalize(lightPos);
+      return drawGenericRes<SDF_TEX>(fb, time, lowRes);
+    }
+
+    case 5:
+      //lerpFactor = 0.3f;
+      lerpFactor = fm_sinf(time*4.0f) * 0.5f + 0.5f;
+      lightPos = {
+        fm_sinf(time*1.3f),
+        fm_cosf(time*1.5f) * 0.5f + 0.5f,
+        fm_cosf(time*1.3f),
+      };
+      return drawGenericRes<SDF_TEX_SPHERE>(fb, time, lowRes);
   }
 }
 

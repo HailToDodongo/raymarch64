@@ -49,6 +49,19 @@ namespace SDF {
       );
   }
 
+  fm_vec3_t sphereTangents(const fm_vec3_t& p) {
+      auto n = sphereNormals(p);
+      fm_vec3_t tangent;
+      if(fabsf(n.x) < fabsf(n.y) && fabsf(n.x) < fabsf(n.z)) {
+        tangent = Math::cross(n, {1,0,0});
+      } else if(fabsf(n.y) < fabsf(n.z)) {
+        tangent = Math::cross(n, {0,1,0});
+      } else {
+        tangent = Math::cross(n, {0,0,1});
+      }
+      return Math::normalizeUnsafe(tangent);
+  }
+
   float cylinder(const fm_vec3_t& p) {
       constexpr float r = 0.25f;
       return sqrtf(p.x*p.x + p.z*p.z) - r;

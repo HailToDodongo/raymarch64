@@ -15,8 +15,6 @@ include_directories(src)
 add_executable(n64raymarcher
         src/main.cpp
         src/text.cpp
-        src/rdp/rdp.h
-        src/rdp/rdp.cpp
         src/raymarch.cpp
         src/math/mathFloat.cpp
         src/camera/flyCam.cpp)

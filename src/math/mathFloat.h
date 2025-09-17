@@ -104,6 +104,14 @@ namespace Math
   // sin_approx() taken and reduced from libdragons fm_sinf()
   float sinApprox(float x);
 
+  constexpr fm_vec3_t min(fm_vec3_t const& lhs, fm_vec3_t const& rhs) {
+    return {
+      fminf(lhs.v[0], rhs.v[0]),
+      fminf(lhs.v[1], rhs.v[1]),
+      fminf(lhs.v[2], rhs.v[2]),
+    };
+  }
+
   constexpr float clamp(float v, float mn, float mx) {
     return v < mn ? mn : (v > mx ? mx : v);
   }

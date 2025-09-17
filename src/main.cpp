@@ -20,13 +20,13 @@ namespace {
   constinit bool freeCam = true;
   constinit int redrawMenu = 4;
 
-  constexpr int MAX_SDF_IDX = 3;
-  int sdfIdx = 0;
+  constexpr int MAX_SDF_IDX = 5;
+  int sdfIdx = MAX_SDF_IDX;
 
   surface_t fbs[3] = {
-    {FMT_RGBA16, SCREEN_WIDTH, SCREEN_HEIGHT, FB_STRIDE, (void*)0xA0280000},
-    {FMT_RGBA16, SCREEN_WIDTH, SCREEN_HEIGHT, FB_STRIDE, (void*)0xA0300000},
-    {FMT_RGBA16, SCREEN_WIDTH, SCREEN_HEIGHT, FB_STRIDE, (void*)0xA0380000},
+    {FMT_RGBA16, SCREEN_WIDTH, SCREEN_HEIGHT, FB_STRIDE, (void*)MemMap::FB0},
+    {FMT_RGBA16, SCREEN_WIDTH, SCREEN_HEIGHT, FB_STRIDE, (void*)MemMap::FB1},
+    {FMT_RGBA16, SCREEN_WIDTH, SCREEN_HEIGHT, FB_STRIDE, (void*)MemMap::FB2},
   };
 }
 
@@ -70,7 +70,7 @@ int main()
     joypad_init();
     debug_init_isviewer();
     debug_init_usblog();
-    //dfs_init(DFS_DEFAULT_LOCATION);
+    dfs_init(DFS_DEFAULT_LOCATION);
 
     vi_init();
     vi_set_dedither(false);
@@ -91,6 +91,7 @@ int main()
   for(;;) 
   {
     float deltaTime = 0.025f;
+    if (!lowRes)deltaTime *= 4;
 
     auto markMenuRedraw = [](){
       redrawMenu = lowRes ? 4 : 1;

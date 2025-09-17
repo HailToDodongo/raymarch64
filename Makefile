@@ -11,16 +11,31 @@ src = $(wildcard src/*.cpp) $(wildcard src/math/*.cpp)
 src += $(wildcard src/rdp/*.cpp) $(wildcard src/rsp/*.cpp)
 src += $(wildcard src/camera/*.cpp)
 
-assets_png = $(wildcard assets/*.rgba16.png)
+assets_png = $(wildcard assets/*.tex.png)
 
-assets_conv = $(patsubst assets/%,filesystem/%,$(assets_png:%.png=%.sprite))
+assets_conv = $(patsubst assets/%,filesystem/%,$(assets_png:%.tex.png=%.tex))
 
 all: $(PROJECT_NAME).z64
 
-filesystem/%.sprite: assets/%.png
+#filesystem/%.sprite: assets/%.png
+#	@mkdir -p $(dir $@)
+#	@echo "    [SPRITE] $@"
+#	$(N64_MKSPRITE) $(MKSPRITE_FLAGS) -o $(dir $@) "$<"
+
+filesystem/%.tex: assets/%.tex.png
 	@mkdir -p $(dir $@)
-	@echo "    [SPRITE] $@"
-	$(N64_MKSPRITE) $(MKSPRITE_FLAGS) -o $(dir $@) "$<"
+	@echo "    [IMG] $@ $<"
+	./tools/imgconv/imgconv "$<" $@
+	$(N64_BINDIR)/mkasset -c 1 -o $(dir $@) $@
+
+build/%.dfs:
+	@mkdir -p $(dir $@)
+	@echo "    [DFS*] $@ $(<D)"
+	$(N64_MKDFS) $@ filesystem >/dev/null
+
+tools/imgconv/imgconv:
+	@echo "    [BUILD] imgconv"
+	@make -C tools/imgconv
 
 # RSP metadata
 $(SOURCE_DIR)/src/rsp/rsp_raymarch_layout.h: $(BUILD_DIR)/src/rsp/rsp_raymarch.o
@@ -45,7 +60,7 @@ $(BUILD_DIR)/$(PROJECT_NAME).dfs: $(assets_conv)
 $(BUILD_DIR)/$(PROJECT_NAME).elf: $(src:%.cpp=$(BUILD_DIR)/%.o) $(BUILD_DIR)/src/rsp/rsp_raymarch.o
 
 $(PROJECT_NAME).z64: N64_ROM_TITLE="Raymarcher 64"
-# $(PROJECT_NAME).z64: $(BUILD_DIR)/$(PROJECT_NAME).dfs
+$(PROJECT_NAME).z64: $(BUILD_DIR)/$(PROJECT_NAME).dfs
 
 fonts:
 	node tools/createFont.mjs assets/font.png src/font.h
