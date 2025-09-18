@@ -16,7 +16,7 @@ namespace {
 
   constinit uint32_t frame = 0;
   constinit float currTime = 0.0f;
-  constinit bool lowRes = true;
+  constinit int resolution = 1;
   constinit bool freeCam = true;
   constinit int redrawMenu = 4;
 
@@ -90,17 +90,17 @@ int main()
 
   for(;;) 
   {
-    float deltaTime = 0.025f;
-    if (!lowRes)deltaTime *= 4;
+    float deltaTime = 0.1f / resolution;
 
     auto markMenuRedraw = [](){
-      redrawMenu = lowRes ? 4 : 1;
+      redrawMenu = (resolution > 1) ? 4 : 1;
     };
 
     joypad_poll();
     auto press = joypad_get_buttons_pressed(JOYPAD_PORT_1);
-    if(press.a) {
-      lowRes = !lowRes;
+    if(press.a || press.b) {
+      if (press.a && resolution < 4)resolution *= 2;
+      if (press.b && resolution > 1)resolution /= 2;
       markMenuRedraw();
       vi_wait_vblank();
     }
@@ -113,7 +113,7 @@ int main()
     if(sdfIdx < 0)sdfIdx = MAX_SDF_IDX;
     if(sdfIdx > MAX_SDF_IDX)sdfIdx = 0;
 
-    if(lowRes) {
+    if(resolution > 1) {
       // low-res mode is fast enough to afford proper buffering.
       // for high-res we intentionally keep the same buffer to see the progress in real time
       frame = (frame + 1) % 3;
@@ -135,7 +135,12 @@ int main()
 
     if(redrawMenu != 0) {
       Text::printf(130, 222, "[L/R] SDF:%d", sdfIdx);
-      Text::print(240, 222, lowRes ? "[A] 1/4x" : "[A] 1x``");
+      switch (resolution) {
+        default:
+        case 1: Text::print(240, 222, "[A] Full"); break;
+        case 2: Text::print(240, 222, "[A] 1/2x"); break;
+        case 4: Text::print(240, 222, "[A] 1/4x"); break;
+      }
       --redrawMenu;
     }
 
@@ -144,7 +149,7 @@ int main()
     disable_interrupts();
 
       auto ticks = get_ticks();
-      RayMarch::draw(fb->buffer, currTime, sdfIdx, lowRes);
+      RayMarch::draw(fb->buffer, currTime, sdfIdx, resolution);
       ticks = get_ticks() - ticks;
 
     enable_interrupts();
