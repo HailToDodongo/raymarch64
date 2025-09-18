@@ -106,7 +106,7 @@ function Main()
 
   //u32<$a0> dmemFbAddr = 0x1000;
 
-  s32<$a0> RENDER_DIST = 11.0 << 16;
+  s32<$a0> RENDER_DIST = load(ZERO, DMEM_RENDER_DIST);
   s32<$a1> STOP_DIST   = 0.016 * 0xFFFF;
 }
 

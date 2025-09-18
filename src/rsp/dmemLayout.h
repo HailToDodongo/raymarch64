@@ -16,3 +16,4 @@
 #define DMEM_LERP_B 78
 
 #define DMEM_INIT_DIST 80
+#define DMEM_RENDER_DIST 84

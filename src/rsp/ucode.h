@@ -33,6 +33,10 @@ namespace UCode
     *SP_STATUS = SP_WSTATUS_SET_HALT;
   }
 
+  inline void setRenderDist(float dist) {
+    SP_DMEM[DMEM_RENDER_DIST/4] = FP32{dist}.val;
+  }
+
   inline void reset(const FP32Vec3& rayPos, float lerpFactor, float initialDist)
   {
     SP_DMEM[DMEM_RAYPOS_X/4] = rayPos.x.val;

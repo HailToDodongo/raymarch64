@@ -295,6 +295,8 @@ void RayMarch::init() {
 
 void RayMarch::draw(void* fb, float time, int sdfIdx, int resFactor)
 {
+  UCode::setRenderDist(RENDER_DIST);
+
   switch(sdfIdx)
   {
     case 0:

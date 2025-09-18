@@ -13,7 +13,7 @@ namespace {
   constexpr uint32_t FB_STRIDE = SCREEN_WIDTH * 2;
 
   // ray-marcher settings
-  constexpr float RENDER_DIST = 11.0f;
+  constexpr float RENDER_DIST = 16.0f;
   constexpr int OUTPUT_WIDTH = 312;
   constexpr int OUTPUT_HEIGHT = 200;
   constexpr int OFFSET_X = 4;
