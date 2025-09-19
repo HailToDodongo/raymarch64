@@ -16,12 +16,12 @@ namespace {
 
   constinit uint32_t frame = 0;
   constinit float currTime = 0.0f;
-  constinit int resolution = 1;
+  constinit int resolution = 2;
   constinit bool freeCam = true;
   constinit int redrawMenu = 4;
 
-  constexpr int MAX_SDF_IDX = 5;
-  int sdfIdx = 4;
+  constexpr int MAX_SDF_IDX = 6;
+  int sdfIdx = MAX_SDF_IDX;
 
   surface_t fbs[3] = {
     {FMT_RGBA16, SCREEN_WIDTH, SCREEN_HEIGHT, FB_STRIDE, (void*)MemMap::FB0},
@@ -83,6 +83,11 @@ int main()
 
     camera.setRotation(0.1f, 2.8f);
     camera.camPos = {0.5f, 0.5f, 0.5f};
+
+    // clear framebuffers
+    for(auto& fb : fbs) {
+      memset(fb.buffer, 0, fb.width * fb.height * 2);
+    }
 
     //wait_ms(500);
     vi_show(&fbs[0]);

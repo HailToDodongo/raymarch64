@@ -40,7 +40,13 @@ namespace
   typedef fm_vec3_t (*FuncNorm)(const fm_vec3_t&);
   typedef uint32_t (*FuncShade)(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist);
 
-  fm_vec3_t lightPos{0,0,0};
+  constinit fm_vec3_t lightPos{};
+  constinit fm_vec3_t right{};
+  constinit fm_vec3_t up{};
+
+  constinit float renderDist = RENDER_DIST;
+  constinit float renderDistInv = 1.0f / RENDER_DIST;
+  constinit FP32 renderDistFP{RENDER_DIST};
 
   struct SDFConf
   {
@@ -55,7 +61,59 @@ namespace
     return (((int)c.r >> 3) << 11) | (((int)c.g >> 3) << 6) | (((int)c.b >> 3) << 1) | (c.a >> 7);
   }
 
+  inline void setRenderDist(float dist) {
+    UCode::setRenderDist(dist);
+    renderDist = dist;
+    renderDistInv = 1.0f / dist;
+    renderDistFP = FP32{dist};
+  }
+
   #include "shading.h"
+
+
+  inline uint32_t shadeResultEnv(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist)
+  {
+    float distNorm = (renderDist - dist);
+    float distNormInv = distNorm * renderDistInv;
+
+    // transform normal to screenspace normal
+    float normX = -Math::dot(norm, right) * 0.4f + 0.5f;
+    float normY = Math::dot(norm, up) * 0.4f + 0.5f;
+
+    float angle = 1.0f - (Math::dot(norm, dir) * 0.5f + 0.5f);
+
+    // Texturing
+    float uv[2] {
+      normX * TEX_DIM,
+      normY * TEX_DIM,
+    };
+
+    int uvPixel[2] = {
+      (int)(uv[0]) & (TEX_DIM-1),
+      (int)(uv[1]) & (TEX_DIM-1),
+    };
+
+    TexPixel* texData = (TexPixel*)(MemMap::TEX3_CACHED);
+    const TexPixel& tex = texData[uvPixel[1] * TEX_DIM + uvPixel[0]];
+
+    fm_vec3_t col;
+    col.x = (tex.color >> 11);
+    col.y = (tex.color >> 6) & 0x1F;
+    col.z = (tex.color) & 0x1F;
+
+    constexpr fm_vec3_t fresnelCol{31.0f, 31.0f, 31.0f};
+    col = Math::mix(
+      fresnelCol, col, angle
+    );
+
+    col *= (distNormInv);
+
+    return ((int)(col.x) << 11) |
+           ((int)(col.y) << 6) |
+           ((int)(col.z) << 1)
+    ;
+  }
+
 
   template<SDFConf CONF, int SCALING>
   void drawGeneric(void* fb, float time)
@@ -76,8 +134,8 @@ namespace
     UCode::reset({FP32{camPos.x}, FP32{camPos.y}, FP32{camPos.z}}, lerpFactor, initialDist);
 
     constexpr fm_vec3_t worldUp{0,1,0};
-    fm_vec3_t right = Math::normalizeUnsafe(Math::cross(camDir, worldUp));
-    fm_vec3_t up = Math::cross(right, camDir);
+    right = Math::normalizeUnsafe(Math::cross(camDir, worldUp));
+    up = Math::cross(right, camDir);
     auto rightStep = right * invH;
     assert(rightStep.y == 0);
 
@@ -165,9 +223,9 @@ namespace
           };
 
           if constexpr (!CONF.bgColor) {
-            if(distTotalA < FP32{RENDER_DIST})applyShade(distTotalA.toFloat(), dir0);
+            if(distTotalA < renderDistFP)applyShade(distTotalA.toFloat(), dir0);
           } else {
-            if(distTotalA < FP32{RENDER_DIST})
+            if(distTotalA < renderDistFP)
               applyShade(distTotalA.toFloat(), dir0);
             else col = CONF.bgColor;
           }
@@ -176,9 +234,9 @@ namespace
 
           col <<= 16;
           if constexpr (!CONF.bgColor) {
-            if(distTotalB < FP32{RENDER_DIST})applyShade(distTotalB.toFloat(), dir1);
+            if(distTotalB < renderDistFP)applyShade(distTotalB.toFloat(), dir1);
           } else {
-            if(distTotalB < FP32{RENDER_DIST})
+            if(distTotalB < renderDistFP)
               applyShade(distTotalB.toFloat(), dir1);
             else col |= CONF.bgColor;
           }
@@ -259,6 +317,14 @@ namespace
     0,
   };
 
+  constexpr SDFConf SDF_ENVMAP = {
+    SDF::main,
+    SDF::mainNormals,
+    shadeResultEnv,
+    RSP_RAY_CODE_RayMarch_Main,
+    0//createBgColor({0xAA,0xAA,0xFF})
+  };
+
   void loadTexture(const char* path, uint32_t addr) {
     int size = TEXTURE_BYTES;
     auto f = asset_fopen(path, &size);
@@ -274,6 +340,7 @@ void RayMarch::init() {
   loadTexture("rom:/stone.tex", MemMap::TEX0);
   loadTexture("rom:/tiles.tex", MemMap::TEX1);
   loadTexture("rom:/space.tex", MemMap::TEX2);
+  loadTexture("rom:/metal.tex", MemMap::TEX3);
 
   // generate normal lookup table, this will give the Z component
   // based on a given X and Y component
@@ -295,7 +362,7 @@ void RayMarch::init() {
 
 void RayMarch::draw(void* fb, float time, int sdfIdx, int resFactor)
 {
-  UCode::setRenderDist(RENDER_DIST);
+  setRenderDist(RENDER_DIST);
 
   switch(sdfIdx)
   {
@@ -323,6 +390,7 @@ void RayMarch::draw(void* fb, float time, int sdfIdx, int resFactor)
       return drawGenericRes<SDF_OCTA>(fb, time, resFactor);
 
     case 4: {
+      setRenderDist(8);
       lerpFactor = 0.3f;
       lightPos = {
         fm_sinf(time*1.3f),
@@ -343,6 +411,11 @@ void RayMarch::draw(void* fb, float time, int sdfIdx, int resFactor)
       };
       lightPos = Math::normalize(lightPos);
       return drawGenericRes<SDF_TEX_SPHERE>(fb, time, resFactor);
+
+    case 6:
+      setRenderDist(3);
+      lerpFactor = fm_sinf(time*4.0f) * 0.5f + 0.5f;
+      return drawGenericRes<SDF_ENVMAP>(fb, time, resFactor);
   }
 }
 

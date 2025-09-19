@@ -6,8 +6,8 @@
 
 inline uint32_t shadeResultA(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist)
 {
-  float distNorm = (RENDER_DIST - dist);
-  float distNormInv = distNorm * (1.0f / RENDER_DIST);
+  float distNorm = (renderDist - dist);
+  float distNormInv = distNorm * renderDistInv;
 
   //uint8_t colr = (res.dist / RENDER_DIST) * 255.0f;
   //return color_to_packed16({colr,colr,colr});
@@ -46,8 +46,8 @@ inline uint32_t shadeResultA(const fm_vec3_t &norm, const fm_vec3_t &hitPos, con
 
 inline uint32_t shadeResultCylinder(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist)
 {
-  float distNorm = (RENDER_DIST - dist);
-  float distNormInv = distNorm * (1.0f / RENDER_DIST);
+  float distNorm = (renderDist - dist);
+  float distNormInv = distNorm * renderDistInv;
 
   float light = -Math::dot(norm, dir);
   light = fmaxf(light, 0);
@@ -75,8 +75,8 @@ inline uint32_t shadeResultCylinder(const fm_vec3_t &norm, const fm_vec3_t &hitP
 
 inline uint32_t shadeResultFlat(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist)
 {
-  float distNorm = (RENDER_DIST - dist);
-  float distNormInv = distNorm * (1.0f / RENDER_DIST);
+  float distNorm = (renderDist - dist);
+  float distNormInv = distNorm * renderDistInv;
 
   float light = -Math::dot(norm, dir);
   light = fmaxf(light, 0);
@@ -105,8 +105,8 @@ inline uint32_t shadeResultFlat(const fm_vec3_t &norm, const fm_vec3_t &hitPos, 
 
 inline uint32_t shadeResultPointLight(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist)
 {
-  float distNorm = (RENDER_DIST - dist);
-  float distNormInv = distNorm * (1.0f / RENDER_DIST);
+  float distNorm = (renderDist - dist);
+  float distNormInv = distNorm * renderDistInv;
 
   constexpr float LIGHT_RANGE = 1.0f / 5.0f;
   fm_vec3_t toLight = lightPos - hitPos;
@@ -163,8 +163,8 @@ constinit int8_t normalZLookup[256][256]{};
 
 inline uint32_t shadeResultTex(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist)
 {
-  float distNorm = (RENDER_DIST - dist);
-  float distNormInv = distNorm * (1.0f / RENDER_DIST);
+  float distNorm = (renderDist - dist);
+  float distNormInv = distNorm * renderDistInv;
 
   int phase = (int)(hitPos.x+0.5f) + (int)(hitPos.z+0.5f);
 
