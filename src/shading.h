@@ -4,6 +4,14 @@
 */
 #pragma once
 
+struct TexPixel
+{
+  int8_t normA;
+  int8_t normB;
+  uint16_t color;
+};
+constexpr int TEX_DIM = 256;
+
 inline uint32_t shadeResultA(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist)
 {
   float distNorm = (renderDist - dist);
@@ -226,6 +234,50 @@ inline uint32_t shadeResultTex(const fm_vec3_t &norm, const fm_vec3_t &hitPos, c
   lightColor = Math::min(lightColor + ambientColor, {1,1,1});
   col *= lightColor;
   col *= distNormInv;
+
+  return ((int)(col.x) << 11) |
+         ((int)(col.y) << 6) |
+         ((int)(col.z) << 1)
+  ;
+}
+
+inline uint32_t shadeResultEnv(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist)
+{
+  float distNorm = (renderDist - dist);
+  float distNormInv = distNorm * renderDistInv;
+  distNormInv = fminf((distNormInv * 2.0f), 1.0f);
+
+  // transform normal to screenspace normal
+  float normX = -Math::dot(norm, right) * 0.4f + 0.5f;
+  float normY = Math::dot(norm, up) * 0.4f + 0.5f;
+
+  float angle = 1.0f - (Math::dot(norm, dir) * 0.5f + 0.5f);
+
+  // Texturing
+  float uv[2] {
+    normX * TEX_DIM,
+    normY * TEX_DIM,
+  };
+
+  int uvPixel[2] = {
+    (int)(uv[0]) & (TEX_DIM-1),
+    (int)(uv[1]) & (TEX_DIM-1),
+  };
+
+  TexPixel* texData = (TexPixel*)(MemMap::TEX3_CACHED);
+  const TexPixel& tex = texData[uvPixel[1] * TEX_DIM + uvPixel[0]];
+
+  fm_vec3_t col;
+  col.x = (tex.color >> 11);
+  col.y = (tex.color >> 6) & 0x1F;
+  col.z = (tex.color) & 0x1F;
+
+  constexpr fm_vec3_t fresnelCol{31.0f, 31.0f, 31.0f};
+  col = Math::mix(
+    fresnelCol, col, (angle * distNormInv)
+  );
+
+//  col *= (distNormInv);
 
   return ((int)(col.x) << 11) |
          ((int)(col.y) << 6) |

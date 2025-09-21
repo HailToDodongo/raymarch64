@@ -8,7 +8,6 @@
 
 namespace {
   constinit float lerpFactor{0};
-  //register float lerpFactor asm ("f20");
 }
 
 #include <libdragon.h>
@@ -25,16 +24,6 @@ extern "C" {
 namespace
 {
   #include "sdf/sdf.h"
-
-  struct TexPixel
-  {
-    int8_t normA;
-    int8_t normB;
-    uint16_t color;
-  };
-  constexpr int TEX_DIM = 256;
-
-
 
   typedef float (*FuncSDF)(const fm_vec3_t&);
   typedef fm_vec3_t (*FuncNorm)(const fm_vec3_t&);
@@ -55,6 +44,7 @@ namespace
     FuncShade fnShade;
     uint32_t fnUcode;
     uint32_t bgColor;
+    float renderDist;
   };
 
   constexpr uint32_t createBgColor(color_t c) {
@@ -70,51 +60,9 @@ namespace
 
   #include "shading.h"
 
-
-  inline uint32_t shadeResultEnv(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist)
-  {
-    float distNorm = (renderDist - dist);
-    float distNormInv = distNorm * renderDistInv;
-
-    // transform normal to screenspace normal
-    float normX = -Math::dot(norm, right) * 0.4f + 0.5f;
-    float normY = Math::dot(norm, up) * 0.4f + 0.5f;
-
-    float angle = 1.0f - (Math::dot(norm, dir) * 0.5f + 0.5f);
-
-    // Texturing
-    float uv[2] {
-      normX * TEX_DIM,
-      normY * TEX_DIM,
-    };
-
-    int uvPixel[2] = {
-      (int)(uv[0]) & (TEX_DIM-1),
-      (int)(uv[1]) & (TEX_DIM-1),
-    };
-
-    TexPixel* texData = (TexPixel*)(MemMap::TEX3_CACHED);
-    const TexPixel& tex = texData[uvPixel[1] * TEX_DIM + uvPixel[0]];
-
-    fm_vec3_t col;
-    col.x = (tex.color >> 11);
-    col.y = (tex.color >> 6) & 0x1F;
-    col.z = (tex.color) & 0x1F;
-
-    constexpr fm_vec3_t fresnelCol{31.0f, 31.0f, 31.0f};
-    col = Math::mix(
-      fresnelCol, col, angle
-    );
-
-    col *= (distNormInv);
-
-    return ((int)(col.x) << 11) |
-           ((int)(col.y) << 6) |
-           ((int)(col.z) << 1)
-    ;
-  }
-
-
+  // We use templates here to intentionally dupe the code.
+  // This means things like different SDFs and scaling can be "hardcoded" by the compiler.
+  // Since we stay in only one function the entire frame, this saves time since it avoids if-checks.
   template<SDFConf CONF, int SCALING>
   void drawGeneric(void* fb, float time)
   {
@@ -166,9 +114,12 @@ namespace
           rayDirXY.z += rightStep.z;
           dirFp0 = {FP32::half(dir0.x), FP32::half(dir0.y), FP32::half(dir0.z)};
           dirFp1 = {FP32::half(dir1.x), FP32::half(dir1.y), FP32::half(dir1.z)};
+
+          dirFp0.x.val = (dirFp0.x.val << 16) | (dirFp0.y.val & 0xFFFF);
+          dirFp1.x.val = (dirFp1.x.val << 16) | (dirFp1.y.val & 0xFFFF);
         };
 
-        auto startNextUcode = [&]() {
+        auto startNextUcode = [&] {
           UCode::setRayDirections(dirFp0, dirFp1);
           UCode::run(CONF.fnUcode);
         };
@@ -182,71 +133,53 @@ namespace
         MEMORY_BARRIER();
 
         rayDirY += (up * invH);
-        uint32_t *buffLocal = (uint32_t*)buff;
-        const uint32_t *buffLocalEnd = buffLocal + (OUTPUT_WIDTH/2);
+        uint16_t *buffLocal = (uint16_t*)buff;
+        const uint16_t *buffLocalEnd = buffLocal + OUTPUT_WIDTH;
 
         advanceDir();
+
+        auto writeColor = [&](uint16_t color)
+        {
+          constexpr auto xy = [](int x, int y){ return y*FB_STRIDE/2 + x; };
+          if constexpr (SCALING == 1) {
+            buffLocal[0] = color;
+          } else if constexpr (SCALING == 2) {
+            buffLocal[xy(0,0)] = color;
+            buffLocal[xy(1,0)] = color;
+            buffLocal[xy(0,1)] = color;
+            buffLocal[xy(1,1)] = color;
+          } else if constexpr (SCALING == 4) {
+            for (int y=0; y<4; ++y) {
+              buffLocal[xy(0,y)] = color;
+              buffLocal[xy(1,y)] = color;
+              buffLocal[xy(2,y)] = color;
+              buffLocal[xy(3,y)] = color;
+            }
+          }
+          buffLocal += SCALING;
+        };
 
         do
         {
           UCode::sync();
-          MEMORY_BARRIER();
+          // Note: reading partial results seems to be slower due to the overhead in extra instructions.
+          // This can be done by e.g. using the DP_END register as a general purpose reg with 24bits.
           auto distTotalA = UCode::getTotalDist(0);
           auto distTotalB = UCode::getTotalDist(1);
 
-          // Note: this starts the RSP to prepare the next iterations result.
-          // the last iteration does so too never reading it, but getting rid of the if-check saves time
           startNextUcode();
           MEMORY_BARRIER();
 
-          uint32_t col = 0;
+          //uint32_t col = 0;
           auto applyShade = [&](float distTotal, const fm_vec3_t &oldDir) {
+            if(distTotal >= renderDist)return CONF.bgColor;
             auto hitPos = camPos + (oldDir * distTotal);
             auto norm = CONF.fnNorm(hitPos);
-            col |= CONF.fnShade(norm, hitPos, oldDir, distTotal);
+            return CONF.fnShade(norm, hitPos, oldDir, distTotal);
           };
 
-          auto writeLowRes = [&]() {
-            col = (col << 16) | col;
-            if constexpr (SCALING == 4) {
-              for(int i=0; i<4; ++i) {
-                buffLocal[FB_STRIDE/4*i] = col;
-                buffLocal[FB_STRIDE/4*i + 1] = col;
-              }
-            } else {
-              for(int i=0; i<2; ++i) {
-                buffLocal[FB_STRIDE/4*i] = col;
-              }
-            }
-            buffLocal += SCALING / 2;
-            col = 0;
-          };
-
-          if constexpr (!CONF.bgColor) {
-            if(distTotalA < renderDistFP)applyShade(distTotalA.toFloat(), dir0);
-          } else {
-            if(distTotalA < renderDistFP)
-              applyShade(distTotalA.toFloat(), dir0);
-            else col = CONF.bgColor;
-          }
-
-          if constexpr(SCALING > 1)writeLowRes();
-
-          col <<= 16;
-          if constexpr (!CONF.bgColor) {
-            if(distTotalB < renderDistFP)applyShade(distTotalB.toFloat(), dir1);
-          } else {
-            if(distTotalB < renderDistFP)
-              applyShade(distTotalB.toFloat(), dir1);
-            else col |= CONF.bgColor;
-          }
-
-          if constexpr (SCALING > 1) {
-            writeLowRes();
-          } else {
-            *buffLocal = col;
-            ++buffLocal;
-          }
+          writeColor(applyShade(distTotalA.toFloat(), dir0));
+          writeColor(applyShade(distTotalB.toFloat(), dir1));
 
           advanceDir();
 
@@ -260,6 +193,7 @@ namespace
   template<SDFConf CONF>
   inline void drawGenericRes(void* fb, float time, int resFactor)
   {
+    setRenderDist(CONF.renderDist);
     switch (resFactor) {
       default:
       case 1: drawGeneric<CONF, 1>(fb, time); break;
@@ -274,7 +208,8 @@ namespace
     SDF::mainNormals,
     shadeResultA,
     RSP_RAY_CODE_RayMarch_Main,
-    0
+    0,
+    11.0f,
   };
 
   constexpr SDFConf SDF_SPHERE = {
@@ -282,7 +217,8 @@ namespace
     SDF::sphereNormals,
     shadeResultPointLight,
     RSP_RAY_CODE_RayMarch_Sphere,
-    0
+    0,
+    11.0f,
   };
 
   constexpr SDFConf SDF_CYLINDER = {
@@ -290,7 +226,8 @@ namespace
     SDF::cylinderNormals,
     shadeResultCylinder,
     RSP_RAY_CODE_RayMarch_Cylinder,
-    createBgColor({0xFF,0xAA,0xFF})
+    createBgColor({0xFF,0xAA,0xFF}),
+    11.0f,
   };
 
   constexpr SDFConf SDF_OCTA = {
@@ -298,7 +235,8 @@ namespace
     SDF::octaNormals,
     shadeResultFlat,
     RSP_RAY_CODE_RayMarch_Octa,
-    createBgColor({0xFF,0x55,0x55})
+    createBgColor({0xFF,0x55,0x55}),
+    11.0f,
   };
 
   constexpr SDFConf SDF_TEX = {
@@ -307,6 +245,7 @@ namespace
     shadeResultTex,
     RSP_RAY_CODE_RayMarch_Cylinder,
     0,
+    8.0f,
   };
 
   constexpr SDFConf SDF_TEX_SPHERE = {
@@ -315,6 +254,7 @@ namespace
     shadeResultTex,
     RSP_RAY_CODE_RayMarch_Main,
     0,
+    11.0f,
   };
 
   constexpr SDFConf SDF_ENVMAP = {
@@ -322,7 +262,8 @@ namespace
     SDF::mainNormals,
     shadeResultEnv,
     RSP_RAY_CODE_RayMarch_Main,
-    0//createBgColor({0xAA,0xAA,0xFF})
+    createBgColor({0xEE,0xEE,0xFF}),
+    5.0f,
   };
 
   void loadTexture(const char* path, uint32_t addr) {
@@ -362,8 +303,6 @@ void RayMarch::init() {
 
 void RayMarch::draw(void* fb, float time, int sdfIdx, int resFactor)
 {
-  setRenderDist(RENDER_DIST);
-
   switch(sdfIdx)
   {
     case 0:
@@ -390,7 +329,6 @@ void RayMarch::draw(void* fb, float time, int sdfIdx, int resFactor)
       return drawGenericRes<SDF_OCTA>(fb, time, resFactor);
 
     case 4: {
-      setRenderDist(8);
       lerpFactor = 0.3f;
       lightPos = {
         fm_sinf(time*1.3f),
@@ -413,7 +351,6 @@ void RayMarch::draw(void* fb, float time, int sdfIdx, int resFactor)
       return drawGenericRes<SDF_TEX_SPHERE>(fb, time, resFactor);
 
     case 6:
-      setRenderDist(3);
       lerpFactor = fm_sinf(time*4.0f) * 0.5f + 0.5f;
       return drawGenericRes<SDF_ENVMAP>(fb, time, resFactor);
   }

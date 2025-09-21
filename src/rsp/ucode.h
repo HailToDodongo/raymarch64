@@ -13,7 +13,6 @@ namespace UCode
   inline void run(uint32_t pc = 0)
   {
     *SP_PC = pc;
-    MEMORY_BARRIER();
     *SP_STATUS = SP_WSTATUS_CLEAR_HALT | SP_WSTATUS_CLEAR_BROKE | SP_WSTATUS_SET_INTR_BREAK;
 //      | SP_WSTATUS_CLEAR_SIG1 | SP_WSTATUS_CLEAR_SIG2;
   }
@@ -56,23 +55,10 @@ namespace UCode
 
   inline void setRayDirections(const FP32Vec3& dirA, const FP32Vec3& dirB)
   {
-  /*
-    constexpr int idx = 128 / 4;
-    SP_DMEM[idx+0] = (dirA.x.val & 0xFFFF'0000) | ((uint32_t)dirA.y.val >> 16);
-    SP_DMEM[idx+1] = dirA.z.val;
-    SP_DMEM[idx+2] = (dirB.x.val & 0xFFFF'0000) | ((uint32_t)dirB.y.val >> 16);
-    SP_DMEM[idx+3] = dirB.z.val;
-
-    SP_DMEM[idx+4] = (dirA.x.val << 16) | (dirA.y.val & 0xFFFF);
-    SP_DMEM[idx+5] = dirA.z.val << 16;
-    SP_DMEM[idx+6] = (dirB.x.val << 16) | (dirB.y.val & 0xFFFF);
-    SP_DMEM[idx+7] = dirB.z.val << 16;
-    */
-
-    SP_DMEM[DMEM_RAYDIR_A/4 + 0] = (dirA.x.val << 16) | (dirA.y.val & 0xFFFF);
+    SP_DMEM[DMEM_RAYDIR_A/4 + 0] = dirA.x.val;
     *((uint16_t*)&SP_DMEM[DMEM_RAYDIR_A/4 + 1]) = dirA.z.val;
 
-    SP_DMEM[DMEM_RAYDIR_B/4 + 0] = (dirB.x.val << 16) | (dirB.y.val & 0xFFFF);
+    SP_DMEM[DMEM_RAYDIR_B/4 + 0] = dirB.x.val;
     *((uint16_t*)&SP_DMEM[DMEM_RAYDIR_B/4 + 1]) = dirB.z.val;
   }
 

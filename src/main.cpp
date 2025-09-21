@@ -16,7 +16,7 @@ namespace {
 
   constinit uint32_t frame = 0;
   constinit float currTime = 0.0f;
-  constinit int resolution = 2;
+  constinit int resolution = 1;
   constinit bool freeCam = true;
   constinit int redrawMenu = 4;
 
@@ -62,6 +62,7 @@ int main()
 {
   resetAddr = (uint32_t)main;
   register_exception_handler(fpuExceptionHandler);
+  *DP_STATUS = (DP_WSTATUS_SET_FREEZE | DP_WSTATUS_SET_FLUSH);
 
   if(!isReset)
   {
@@ -93,7 +94,7 @@ int main()
     vi_show(&fbs[0]);
   }
 
-  for(;;) 
+  for(;;)
   {
     float deltaTime = 0.1f / resolution;
 
@@ -139,12 +140,12 @@ int main()
     Text::setFrameBuffer(*fb);
 
     if(redrawMenu != 0) {
-      Text::printf(130, 222, "[L/R] SDF:%d", sdfIdx);
+      Text::printf(120, 222, "[L/R] SDF:%d", sdfIdx);
       switch (resolution) {
         default:
-        case 1: Text::print(240, 222, "[A] Full"); break;
-        case 2: Text::print(240, 222, "[A] 1/2x"); break;
-        case 4: Text::print(240, 222, "[A] 1/4x"); break;
+        case 1: Text::print(230, 222, "[A/B] Full"); break;
+        case 2: Text::print(230, 222, "[A/B] 1/2x"); break;
+        case 4: Text::print(230, 222, "[A/B] 1/4x"); break;
       }
       --redrawMenu;
     }
