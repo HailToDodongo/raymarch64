@@ -258,14 +258,6 @@ namespace
     .renderDist = 8.0f,
   };
 
-  constexpr SDFConf SDF_TEX_SPHERE = {
-    .fnSDF = SDF::main,
-    .fnNorm = SDF::mainNormals,
-    .fnShade = shadeResultTex,
-    .fnUcode = RSP_RAY_CODE_RayMarch_Main,
-    .renderDist = 11.0f,
-  };
-
   constexpr SDFConf SDF_ENVMAP = {
     .fnSDF = SDF::main,
     .fnNorm = SDF::mainNormals,
@@ -357,11 +349,7 @@ void RayMarch::draw(void* fb, float time, int sdfIdx, int resFactor)
       lerpFactor = fm_sinf(time*3.0f) * 0.1f + 0.15f;
       return drawGenericRes<SDF_CYLINDER>(fb, time, resFactor);
 
-    case 3:
-      lerpFactor = (fm_sinf(time*3.0f) * 0.22f + 0.22f) + 0.05f;
-      return drawGenericRes<SDF_OCTA>(fb, time, resFactor);
-
-    case 4: {
+    case 3: {
       lerpFactor = 0.3f;
       lightPos = {
         fm_sinf(time*1.3f),
@@ -372,30 +360,23 @@ void RayMarch::draw(void* fb, float time, int sdfIdx, int resFactor)
       return drawGenericRes<SDF_TEX>(fb, time, resFactor);
     }
 
-    case 5:
-      //lerpFactor = 0.3f;
-      lerpFactor = fm_sinf(time*4.0f) * 0.5f + 0.5f;
-      lightPos = {
-        fm_sinf(time*1.3f),
-        fm_cosf(time*1.5f) * 0.5f + 0.5f,
-        fm_cosf(time*1.3f),
-      };
-      lightPos = Math::normalize(lightPos);
-      return drawGenericRes<SDF_TEX_SPHERE>(fb, time, resFactor);
+    case 4:
+      lerpFactor = (fm_sinf(time*3.0f) * 0.22f + 0.22f) + 0.05f;
+      return drawGenericRes<SDF_OCTA>(fb, time, resFactor);
 
-    case 6:
+    case 5:
       lerpFactor = fm_sinf(time*4.0f) * 0.5f + 0.5f;
       return drawGenericRes<SDF_ENVMAP>(fb, time, resFactor);
 
-    case 7: 
+    case 6: 
       lerpFactor = fm_sinf(time*3.0f) * 0.5f + 0.5f;
       return drawGenericRes<SDF_ENVMAP_2>(fb, time, resFactor);
 
-    case 8:
+    case 7:
       lerpFactor = fm_sinf(time*2.0f) * 0.5f + 0.5f;
       return drawGenericRes<SDF_ENVMAP_3>(fb, time, resFactor);
 
-    case 9:
+    case 8:
       lerpFactor = fm_sinf(time*4.0f) * 0.125f + 0.25f;
       return drawGenericRes<SDF_SPHERE_INF>(fb, time, resFactor);
   }

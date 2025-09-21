@@ -20,7 +20,7 @@ namespace {
   constinit bool freeCam = true;
   constinit int redrawMenu = 4;
 
-  constexpr int MAX_SDF_IDX = 9;
+  constexpr int MAX_SDF_IDX = 8;
   int sdfIdx = MAX_SDF_IDX-1;
 
   surface_t fbs[3] = {
