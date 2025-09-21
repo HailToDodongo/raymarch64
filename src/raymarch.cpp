@@ -43,8 +43,9 @@ namespace
     FuncNorm fnNorm;
     FuncShade fnShade;
     uint32_t fnUcode;
-    uint32_t bgColor;
+    uint32_t bgColor = 0;
     float renderDist;
+    bool shadeNoHit = false;
   };
 
   constexpr uint32_t createBgColor(color_t c) {
@@ -59,6 +60,12 @@ namespace
   }
 
   #include "shading.h"
+
+  void loadTexture(const char* path, uint32_t addr, int size = TEXTURE_BYTES) {
+    auto f = asset_fopen(path, &size);
+    fread((void*)addr, 1, size, f);
+    fclose(f);
+  }
 
   // We use templates here to intentionally dupe the code.
   // This means things like different SDFs and scaling can be "hardcoded" by the compiler.
@@ -115,6 +122,7 @@ namespace
           dirFp0 = {FP32::half(dir0.x), FP32::half(dir0.y), FP32::half(dir0.z)};
           dirFp1 = {FP32::half(dir1.x), FP32::half(dir1.y), FP32::half(dir1.z)};
 
+          // pre-shift values for the RSP, which only needs the fractional 16bit part
           dirFp0.x.val = (dirFp0.x.val << 16) | (dirFp0.y.val & 0xFFFF);
           dirFp1.x.val = (dirFp1.x.val << 16) | (dirFp1.y.val & 0xFFFF);
         };
@@ -127,7 +135,7 @@ namespace
         advanceDir();
 
         MEMORY_BARRIER();
-        startNextUcode();
+        startNextUcode(); // @TODO: not doing this causes glitches on hardware, why?
         UCode::stop();
         startNextUcode();
         MEMORY_BARRIER();
@@ -172,7 +180,12 @@ namespace
 
           //uint32_t col = 0;
           auto applyShade = [&](float distTotal, const fm_vec3_t &oldDir) {
-            if(distTotal >= renderDist)return CONF.bgColor;
+            if(distTotal >= renderDist) {
+              if constexpr (CONF.shadeNoHit) {
+                return CONF.fnShade({0,0,0}, {0,0,0}, oldDir, 0);
+              }
+              return CONF.bgColor;
+            }
             auto hitPos = camPos + (oldDir * distTotal);
             auto norm = CONF.fnNorm(hitPos);
             return CONF.fnShade(norm, hitPos, oldDir, distTotal);
@@ -204,80 +217,100 @@ namespace
   }
 
   constexpr SDFConf SDF_MAIN = {
-    SDF::main,
-    SDF::mainNormals,
-    shadeResultA,
-    RSP_RAY_CODE_RayMarch_Main,
-    0,
-    11.0f,
+    .fnSDF = SDF::main,
+    .fnNorm = SDF::mainNormals,
+    .fnShade = shadeResultA,
+    .fnUcode = RSP_RAY_CODE_RayMarch_Main,
+    .renderDist = 11.0f,
   };
 
   constexpr SDFConf SDF_SPHERE = {
-    SDF::sphere,
-    SDF::sphereNormals,
-    shadeResultPointLight,
-    RSP_RAY_CODE_RayMarch_Sphere,
-    0,
-    11.0f,
+    .fnSDF = SDF::sphere,
+    .fnNorm = SDF::sphereNormals,
+    .fnShade = shadeResultPointLight,
+    .fnUcode = RSP_RAY_CODE_RayMarch_Sphere,
+    .renderDist = 11.0f,
   };
 
   constexpr SDFConf SDF_CYLINDER = {
-    SDF::cylinder,
-    SDF::cylinderNormals,
-    shadeResultCylinder,
-    RSP_RAY_CODE_RayMarch_Cylinder,
-    createBgColor({0xFF,0xAA,0xFF}),
-    11.0f,
+    .fnSDF = SDF::cylinder,
+    .fnNorm = SDF::cylinderNormals,
+    .fnShade = shadeResultCylinder,
+    .fnUcode = RSP_RAY_CODE_RayMarch_Cylinder,
+    .bgColor = createBgColor({0xFF,0xAA,0xFF}),
+    .renderDist = 11.0f,
   };
 
   constexpr SDFConf SDF_OCTA = {
-    SDF::octa,
-    SDF::octaNormals,
-    shadeResultFlat,
-    RSP_RAY_CODE_RayMarch_Octa,
-    createBgColor({0xFF,0x55,0x55}),
-    11.0f,
+    .fnSDF = SDF::octa,
+    .fnNorm = SDF::octaNormals,
+    .fnShade = shadeResultFlat,
+    .fnUcode = RSP_RAY_CODE_RayMarch_Octa,
+    .bgColor = createBgColor({0xFF,0x55,0x55}),
+    .renderDist = 11.0f,
   };
 
   constexpr SDFConf SDF_TEX = {
-    SDF::cylinder,
-    SDF::cylinderNormals,
-    shadeResultTex,
-    RSP_RAY_CODE_RayMarch_Cylinder,
-    0,
-    8.0f,
+    .fnSDF = SDF::cylinder,
+    .fnNorm = SDF::cylinderNormals,
+    .fnShade = shadeResultTex,
+    .fnUcode = RSP_RAY_CODE_RayMarch_Cylinder,
+    .renderDist = 8.0f,
   };
 
   constexpr SDFConf SDF_TEX_SPHERE = {
-    SDF::main,
-    SDF::mainNormals,
-    shadeResultTex,
-    RSP_RAY_CODE_RayMarch_Main,
-    0,
-    11.0f,
+    .fnSDF = SDF::main,
+    .fnNorm = SDF::mainNormals,
+    .fnShade = shadeResultTex,
+    .fnUcode = RSP_RAY_CODE_RayMarch_Main,
+    .renderDist = 11.0f,
   };
 
   constexpr SDFConf SDF_ENVMAP = {
-    SDF::main,
-    SDF::mainNormals,
-    shadeResultEnv,
-    RSP_RAY_CODE_RayMarch_Main,
-    createBgColor({0xEE,0xEE,0xFF}),
-    5.0f,
+    .fnSDF = SDF::main,
+    .fnNorm = SDF::mainNormals,
+    .fnShade = shadeResultEnv,
+    .fnUcode = RSP_RAY_CODE_RayMarch_Main,
+    .bgColor = createBgColor({0xEE,0xEE,0xFF}),
+    .renderDist = 5.0f,
   };
 
-  void loadTexture(const char* path, uint32_t addr) {
-    int size = TEXTURE_BYTES;
-    auto f = asset_fopen(path, &size);
-    fread((void*)addr, 1, size, f);
-    fclose(f);
-  }
+  constexpr SDFConf SDF_ENVMAP_2 = {
+    .fnSDF = SDF::main,
+    .fnNorm = SDF::mainNormals,
+    .fnShade = shadeResultEnv2,
+    .fnUcode = RSP_RAY_CODE_RayMarch_Main,
+    .renderDist = 5.0f,
+    .shadeNoHit = true
+  };
+
+  constexpr SDFConf SDF_ENVMAP_3 = {
+    .fnSDF = SDF::main,
+    .fnNorm = SDF::mainNormals,
+    .fnShade = shadeResultEnvSky,
+    .fnUcode = RSP_RAY_CODE_RayMarch_Main,
+    .renderDist = 6.0f,
+    .shadeNoHit = true
+  };
+
+  constexpr SDFConf SDF_SPHERE_INF = {
+    .fnSDF = SDF::sphere,
+    .fnNorm = SDF::sphereNormals,
+    .fnShade = shadeResultCylinder,
+    .fnUcode = RSP_RAY_CODE_RayMarch_Sphere,
+    .bgColor = createBgColor({0xFF,0xAA,0xFF}),
+    .renderDist = 64.0f,
+    .shadeNoHit = false
+  };
+
+
 }
 
 void RayMarch::init() {
   rsp_load(&rsp_raymarch);
   UCode::sync();
 
+  loadTexture("rom:/sky.tex", MemMap::TEX_SKY, 1024*512*2);
   loadTexture("rom:/stone.tex", MemMap::TEX0);
   loadTexture("rom:/tiles.tex", MemMap::TEX1);
   loadTexture("rom:/space.tex", MemMap::TEX2);
@@ -353,6 +386,18 @@ void RayMarch::draw(void* fb, float time, int sdfIdx, int resFactor)
     case 6:
       lerpFactor = fm_sinf(time*4.0f) * 0.5f + 0.5f;
       return drawGenericRes<SDF_ENVMAP>(fb, time, resFactor);
+
+    case 7: 
+      lerpFactor = fm_sinf(time*3.0f) * 0.5f + 0.5f;
+      return drawGenericRes<SDF_ENVMAP_2>(fb, time, resFactor);
+
+    case 8:
+      lerpFactor = fm_sinf(time*2.0f) * 0.5f + 0.5f;
+      return drawGenericRes<SDF_ENVMAP_3>(fb, time, resFactor);
+
+    case 9:
+      lerpFactor = fm_sinf(time*4.0f) * 0.125f + 0.25f;
+      return drawGenericRes<SDF_SPHERE_INF>(fb, time, resFactor);
   }
 }
 

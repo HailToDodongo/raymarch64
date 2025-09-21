@@ -587,6 +587,11 @@ RayMarch_Octa:
   bne $t5, $t6, __Octa_RET_MARK_DONE_B               ## L:1111 |     52 | if(isDoneAFlag != isDoneBFlag)goto __Octa_RET_MARK_DONE_B;
   sw $t1, 72($zero)                                  ## L:1109 |    *54 | store(totalDistB, ZERO, 72);
   break # inline-ASM                                 ## L:1112 |      0 | asm("break");
+Dummy:
+  lui $t0, 0x42
+  sw $t0, 40($zero)
+  sw $t0, 72($zero)
+  break
 
 OVERLAY_CODE_END:
 

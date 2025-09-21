@@ -22,10 +22,14 @@ all: $(PROJECT_NAME).z64
 #	@echo "    [SPRITE] $@"
 #	$(N64_MKSPRITE) $(MKSPRITE_FLAGS) -o $(dir $@) "$<"
 
+IMG_PARAMS = n
+filesystem/metal.tex: IMG_PARAMS = c
+filesystem/sky.tex: IMG_PARAMS = c
+
 filesystem/%.tex: assets/%.tex.png
 	@mkdir -p $(dir $@)
 	@echo "    [IMG] $@ $<"
-	./tools/imgconv/imgconv "$<" $@
+	./tools/imgconv/imgconv "$<" $@ ${IMG_PARAMS}
 	$(N64_BINDIR)/mkasset -c 1 -o $(dir $@) $@
 
 build/%.dfs:
@@ -36,6 +40,8 @@ build/%.dfs:
 tools/imgconv/imgconv:
 	@echo "    [BUILD] imgconv"
 	@make -C tools/imgconv
+
+$(assets_conv): tools/imgconv/imgconv
 
 # RSP metadata
 $(SOURCE_DIR)/src/rsp/rsp_raymarch_layout.h: $(BUILD_DIR)/src/rsp/rsp_raymarch.o
@@ -55,6 +61,8 @@ $(SOURCE_DIR)/src/rsp/rsp_raymarch_layout.h: $(BUILD_DIR)/src/rsp/rsp_raymarch.o
 		>> $(SOURCE_DIR)/src/rsp/rsp_raymarch_layout.h
 
 $(BUILD_DIR)/src/raymarch.o: $(SOURCE_DIR)/src/rsp/rsp_raymarch_layout.h
+
+$(BUILD_DIR)/src/raymarch.o: src/shading.h src/sdf/sdf.h
 
 $(BUILD_DIR)/$(PROJECT_NAME).dfs: $(assets_conv)
 $(BUILD_DIR)/$(PROJECT_NAME).elf: $(src:%.cpp=$(BUILD_DIR)/%.o) $(BUILD_DIR)/src/rsp/rsp_raymarch.o

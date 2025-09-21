@@ -15,9 +15,13 @@ namespace
   uint16_t packRGBA5515(uint8_t r, uint8_t g, uint8_t b, bool a) {
     return ((r >> 3) << 11) | ((g >> 3) << 6) | ((b >> 3) << 0) | (a ? (1<<5) : 0);
   }
+
+  uint16_t packRGBA556(uint8_t r, uint8_t g, uint8_t b) {
+    return (((int)r >> 3) << 11) | (((int)g >> 3) << 6) | (((int)b >> 2));
+  }
 }
 
-void processPNG(const string& fileTex, const string& fileOut)
+void processPNG(const string& fileTex, const string& fileOut, bool texOnly)
 {
   vector<unsigned char> image;
   unsigned width, height;
@@ -43,38 +47,48 @@ void processPNG(const string& fileTex, const string& fileOut)
   constexpr uint32_t TEX_DIM = 256;
   constexpr uint32_t idxNorm = TEX_DIM * TEX_DIM * 4;
 
-  assert(width == TEX_DIM);
-  assert(height == TEX_DIM*2);
 
   uint8_t *dataCol = image.data();
   uint8_t *dataNorm = image.data() + idxNorm;
 
-  int defCount = 0;
-  for (unsigned y = 0; y < TEX_DIM; ++y) {
-    for (unsigned x = 0; x < TEX_DIM; ++x) {
-      writeS8(dataNorm[0] - 127);
-      writeS8(dataNorm[1] - 127);
-      bool isDefNorm = dataNorm[2] >= 252;
-      /*if (dataNorm[2] > 253) {
-        ++defCount;
-        printf("N: %d (%d %d)\n", dataNorm[2], dataNorm[0]-127, dataNorm[1]-127);
-      }*/
-      writeU16(packRGBA5515(dataCol[0],dataCol[1],dataCol[2], isDefNorm));
-      dataCol += 4;
-      dataNorm += 4;
+  if(texOnly) 
+  {
+    for(unsigned y = 0; y < height; ++y) 
+    {
+      for(unsigned x = 0; x < width; ++x) 
+      {
+        writeU16(packRGBA556(dataCol[0],dataCol[1],dataCol[2]));
+        dataCol += 4;
+      }
+    }
+  } else {
+    assert(width == TEX_DIM);
+    assert(height == TEX_DIM*2);
+
+    for(unsigned y = 0; y < TEX_DIM; ++y) 
+    {
+      for(unsigned x = 0; x < TEX_DIM; ++x) 
+      {
+        writeS8(dataNorm[0] - 127);
+        writeS8(dataNorm[1] - 127);
+        
+        bool isDefNorm = dataNorm[2] >= 252;
+        writeU16(packRGBA5515(dataCol[0],dataCol[1],dataCol[2], isDefNorm));
+
+        dataCol += 4;
+        dataNorm += 4;
+      }
     }
   }
-
-  //printf("Def: %d / %d\n", defCount, TEX_DIM*TEX_DIM);
 
   fclose(pFile);
 }
 
 int main(int argc, char* argv[]) {
-    if (argc < 3) {
-        cerr << "Usage: " << argv[0] << " <texture.png> <output> \n";
+    if (argc < 4) {
+        cerr << "Usage: " << argv[0] << " <texture.png> <output> [c,n]\n";
         return 1;
     }
-    processPNG(argv[1], argv[2]);
+    processPNG(argv[1], argv[2], argv[3][0] == 'c');
     return 0;
 }

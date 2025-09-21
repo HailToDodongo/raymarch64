@@ -31,21 +31,25 @@ namespace {
 
 namespace MemMap
 {
-  constexpr uint32_t FB0 = 0xA020'0000;
-  constexpr uint32_t FB1 = 0xA024'0000;
-  constexpr uint32_t FB2 = 0xA028'0000;
+  constexpr uint32_t FB0 = 0xA010'0000;
+  constexpr uint32_t FB1 = 0xA014'0000;
+  constexpr uint32_t FB2 = 0xA018'0000;
 
-  constexpr uint32_t TEX0 = 0xA030'0000;
-  constexpr uint32_t TEX0_CACHED = 0x8030'0000;
+  constexpr uint32_t TEX0 = 0xA01C'0000;
+  constexpr uint32_t TEX0_CACHED = 0x801C'0000;
 
-  constexpr uint32_t TEX1 = 0xA034'0000;
-  constexpr uint32_t TEX1_CACHED = 0x8034'0000;
+  constexpr uint32_t TEX1 = 0xA020'0000;
+  constexpr uint32_t TEX1_CACHED = 0x8020'0000;
 
-  constexpr uint32_t TEX2 = 0xA038'0000;
-  constexpr uint32_t TEX2_CACHED = 0x8038'0000;
+  constexpr uint32_t TEX2 = 0xA024'0000;
+  constexpr uint32_t TEX2_CACHED = 0x8024'0000;
 
-  constexpr uint32_t TEX3 = 0xA03C'0000;
-  constexpr uint32_t TEX3_CACHED = 0x803C'0000;
+  constexpr uint32_t TEX3 = 0xA028'0000;
+  constexpr uint32_t TEX3_CACHED = 0x8028'0000;
+
+  constexpr uint32_t TEX_SKY = 0xA02C'0000;
+  constexpr uint32_t TEX_SKY_CACHED = 0x802C'0000;
+
 }
 
 // Globals

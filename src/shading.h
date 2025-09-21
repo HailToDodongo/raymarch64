@@ -10,7 +10,11 @@ struct TexPixel
   int8_t normB;
   uint16_t color;
 };
+
 constexpr int TEX_DIM = 256;
+
+constexpr int SKY_WIDTH = 1024;
+constexpr int SKY_HEIGHT = 512;
 
 inline uint32_t shadeResultA(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist)
 {
@@ -248,7 +252,7 @@ inline uint32_t shadeResultEnv(const fm_vec3_t &norm, const fm_vec3_t &hitPos, c
   distNormInv = fminf((distNormInv * 2.0f), 1.0f);
 
   // transform normal to screenspace normal
-  float normX = -Math::dot(norm, right) * 0.4f + 0.5f;
+  float normX = -Math::dot(norm, right) * (0.4f) + 0.5f;
   float normY = Math::dot(norm, up) * 0.4f + 0.5f;
 
   float angle = 1.0f - (Math::dot(norm, dir) * 0.5f + 0.5f);
@@ -264,23 +268,79 @@ inline uint32_t shadeResultEnv(const fm_vec3_t &norm, const fm_vec3_t &hitPos, c
     (int)(uv[1]) & (TEX_DIM-1),
   };
 
-  TexPixel* texData = (TexPixel*)(MemMap::TEX3_CACHED);
-  const TexPixel& tex = texData[uvPixel[1] * TEX_DIM + uvPixel[0]];
+  uint16_t* texData = (uint16_t*)(MemMap::TEX3_CACHED);
+  uint16_t tex = texData[uvPixel[1] * TEX_DIM + uvPixel[0]];
 
   fm_vec3_t col;
-  col.x = (tex.color >> 11);
-  col.y = (tex.color >> 6) & 0x1F;
-  col.z = (tex.color) & 0x1F;
+  col.x = (tex >> 11);
+  col.y = (tex >> 6) & 0b11111;
+  col.z = (tex >> 1) & 0b11111;
 
   constexpr fm_vec3_t fresnelCol{31.0f, 31.0f, 31.0f};
-  col = Math::mix(
-    fresnelCol, col, (angle * distNormInv)
-  );
-
-//  col *= (distNormInv);
+  col = fresnelCol - (col * (angle * distNormInv));
 
   return ((int)(col.x) << 11) |
          ((int)(col.y) << 6) |
          ((int)(col.z) << 1)
   ;
+}
+
+inline uint16_t sampleSky(const fm_vec3_t &dir) {
+  float u = 0.5f + (atan2(dir.z, dir.x) / (2.0f * M_PI));
+  float v = 0.5f - (asin(dir.y) / M_PI);
+    
+  int uvSky[2] = {
+    (int)(u * SKY_WIDTH) & (SKY_WIDTH-1),
+    (int)(v * SKY_HEIGHT) & (SKY_HEIGHT-1),
+  };
+
+  uint16_t* texSky = (uint16_t*)(MemMap::TEX_SKY_CACHED);
+  return texSky[uvSky[1] * SKY_WIDTH + uvSky[0]];
+}
+
+inline uint32_t shadeResultEnv2(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist)
+{
+  if(dist == 0) {
+    return sampleSky(dir);
+  }
+
+  // transform normal to screenspace normal
+  float normX = -Math::dot(norm, right) * (0.4f) + 0.5f;
+  float normY = Math::dot(norm, up) * 0.4f + 0.5f;
+
+  float angle = 1.0f - (Math::dot(norm, dir) * 0.5f + 0.5f);
+
+  // Texturing
+  float uv[2] {
+    normX * TEX_DIM,
+    normY * TEX_DIM,
+  };
+
+  int uvPixel[2] = {
+    (int)(uv[0]) & (TEX_DIM-1),
+    (int)(uv[1]) & (TEX_DIM-1),
+  };
+
+
+  uint16_t* texData = (uint16_t*)(MemMap::TEX3_CACHED + 0x20000);
+  uint16_t texColor = texData[uvPixel[1] * TEX_DIM + uvPixel[0]];
+
+  fm_vec3_t col;
+  col.x = (texColor >> 11);
+  col.y = (texColor >> 6) & 0b11111;
+  col.z = (texColor >> 1) & 0b11111;
+
+  return ((int)(col.x) << 11) |
+         ((int)(col.y) << 6) |
+         ((int)(col.z) << 1)
+  ;
+}
+
+inline uint32_t shadeResultEnvSky(const fm_vec3_t &norm, const fm_vec3_t &hitPos, const fm_vec3_t &dir, float dist)
+{
+  fm_vec3_t normRef = dir;
+  if(dist != 0) {
+    normRef -= norm * (2.0f * Math::dot(dir, norm));
+  }
+  return sampleSky(normRef);
 }

@@ -16,12 +16,12 @@ namespace {
 
   constinit uint32_t frame = 0;
   constinit float currTime = 0.0f;
-  constinit int resolution = 1;
+  constinit int resolution = 2;
   constinit bool freeCam = true;
   constinit int redrawMenu = 4;
 
-  constexpr int MAX_SDF_IDX = 6;
-  int sdfIdx = MAX_SDF_IDX;
+  constexpr int MAX_SDF_IDX = 9;
+  int sdfIdx = MAX_SDF_IDX-1;
 
   surface_t fbs[3] = {
     {FMT_RGBA16, SCREEN_WIDTH, SCREEN_HEIGHT, FB_STRIDE, (void*)MemMap::FB0},
@@ -73,6 +73,9 @@ int main()
     debug_init_usblog();
     dfs_init(DFS_DEFAULT_LOCATION);
 
+    // check if out manual memory map conflicts with the static data
+    assert(PhysicalAddr(HEAP_START_ADDR) < PhysicalAddr((void*)MemMap::FB0));
+
     vi_init();
     vi_set_dedither(false);
     vi_set_aa_mode(VI_AA_MODE_RESAMPLE);
@@ -90,7 +93,6 @@ int main()
       memset(fb.buffer, 0, fb.width * fb.height * 2);
     }
 
-    //wait_ms(500);
     vi_show(&fbs[0]);
   }
 
