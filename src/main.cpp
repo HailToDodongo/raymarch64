@@ -16,7 +16,7 @@ namespace {
 
   constinit uint32_t frame = 0;
   constinit float currTime = 0.0f;
-  constinit int resolution = 2;
+  constinit int resolution = 1;
   constinit bool freeCam = true;
   constinit int redrawMenu = 4;
 
